@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block titulo %}Espelho de ponto{% endblock %}
+{% block cabecalho %}Espelho de ponto eletrônico{% endblock %}
+{% block conteudo %}
+
+<div class="cartao mb-3" style="display:flex;align-items:end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+  <form class="d-flex align-items-end gap-2" method="get">
+    <div>
+      <label class="form-label mb-1">Competência</label>
+      <input type="month" name="mes" value="{{ mes }}" class="form-control">
+    </div>
+    <button class="btn btn-outline-primary">Consultar</button>
+  </form>
+  <div class="kpi text-end">
+    <span class="valor">{{ '%d:%02d'|format(total_min // 60, total_min % 60) }}</span>
+    <span class="rotulo">Horas trabalhadas no mês</span>
+  </div>
+</div>
+
+<div class="cartao">
+  <div class="cartao-titulo"><i class="bi bi-journal-check"></i> Marcações de {{ mes[5:] }}/{{ mes[:4] }}</div>
+  {% if rows %}
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Data</th><th>Entrada</th><th>Pausa</th><th>Retorno</th><th>Saída</th>
+          <th class="text-end">Horas</th><th class="text-end">NSR</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for r in rows %}
+        <tr>
+          <td><strong>{{ r.dia[8:] }}/{{ r.dia[5:7] }}/{{ r.dia[:4] }}</strong></td>
+          {% for t in ['entrada','pausa','retorno','saida'] %}
+            <td class="mono">{{ r.marc[t].data_hora[11:16] if t in r.marc else '—' }}</td>
+          {% endfor %}
+          <td class="text-end mono">{{ '%d:%02d'|format(r.minutos // 60, r.minutos % 60) }}</td>
+          <td class="text-end mono" style="color:#66708A">
+            {{ '%06d'|format(r.regs[0].nsr) }}–{{ '%06d'|format(r.regs[-1].nsr) }}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="mt-2" style="font-size:.76rem;color:#66708A">
+    <i class="bi bi-shield-check me-1"></i>Espelho de ponto disponibilizado ao trabalhador conforme a Portaria nº 671/2021 (MTE).
+    Registros protegidos por NSR sequencial e hash de integridade.
+  </div>
+  {% else %}
+    <div class="vazio"><i class="bi bi-calendar-x"></i>Nenhuma marcação encontrada nesta competência.</div>
+  {% endif %}
+</div>
+{% endblock %}

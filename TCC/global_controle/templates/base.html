@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Global Controle{% endblock %} · Global Controle</title>
+  <link href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendor/fontes.css') }}" rel="stylesheet">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="marca">
+      <img src="{{ url_for('static', filename='img/marca_globalweb.png') }}" alt="Globalweb" class="marca-img">
+      <div>
+        <div class="marca-nome">Global<span>Controle</span></div>
+        <div class="marca-sub">Globalweb Corp</div>
+      </div>
+    </div>
+
+    <nav class="nav-modulos">
+      <div class="nav-grupo">Visão geral</div>
+      <a href="{{ url_for('dashboard') }}" class="{{ 'ativo' if request.endpoint=='dashboard' }}">
+        <i class="bi bi-grid-1x2"></i> Dashboard</a>
+
+      <div class="nav-grupo">Ponto eletrônico</div>
+      <a href="{{ url_for('ponto') }}" class="{{ 'ativo' if request.endpoint=='ponto' }}">
+        <i class="bi bi-fingerprint"></i> Registrar ponto</a>
+      <a href="{{ url_for('espelho') }}" class="{{ 'ativo' if request.endpoint=='espelho' }}">
+        <i class="bi bi-journal-check"></i> Espelho de ponto</a>
+
+      <a href="{{ url_for('aproveitamento') }}" class="{{ 'ativo' if request.endpoint=='aproveitamento' }}">
+        <i class="bi bi-graph-up-arrow"></i> Aproveitamento</a>
+
+      <div class="nav-grupo">Demandas</div>
+      <a href="{{ url_for('demandas') }}" class="{{ 'ativo' if request.endpoint=='demandas' }}">
+        <i class="bi bi-list-task"></i> Minhas demandas</a>
+      {% if session.perfil in ('gestor','admin') %}
+      <a href="{{ url_for('gerenciar_demandas') }}" class="{{ 'ativo' if request.endpoint=='gerenciar_demandas' }}">
+        <i class="bi bi-kanban"></i> Gerenciar demandas</a>
+      <a href="{{ url_for('equipe') }}" class="{{ 'ativo' if request.endpoint=='equipe' }}">
+        <i class="bi bi-people"></i> Acompanhar equipe</a>
+      {% endif %}
+
+      {% if session.perfil in ('gestor','admin') %}
+      <div class="nav-grupo">Gestão</div>
+      <a href="{{ url_for('relatorios') }}" class="{{ 'ativo' if request.endpoint=='relatorios' }}">
+        <i class="bi bi-file-earmark-spreadsheet"></i> Gerar relatórios</a>
+      {% endif %}
+      {% if session.perfil == 'admin' %}
+      <a href="{{ url_for('usuarios') }}" class="{{ 'ativo' if request.endpoint=='usuarios' }}">
+        <i class="bi bi-person-gear"></i> Gerenciar usuários</a>
+      <a href="{{ url_for('exportar_afd') }}" class="{{ 'ativo' if request.endpoint=='exportar_afd' }}">
+        <i class="bi bi-shield-check"></i> Exportar AFD</a>
+      {% endif %}
+    </nav>
+
+    <div class="sidebar-rodape">
+      <span class="selo-rep">REP-P · Portaria nº 671/2021</span>
+    </div>
+  </aside>
+
+  <div class="principal">
+    <header class="topo">
+      <div>
+        <h1 class="topo-titulo">{% block cabecalho %}{% endblock %}</h1>
+        <div class="topo-data">{{ data_extenso|capitalize }}</div>
+      </div>
+      <div class="topo-usuario">
+        <a href="{{ url_for('perfil') }}" class="chip-usuario">
+          <span class="avatar">{{ session.nome[:1] }}</span>
+          <span>
+            <strong>{{ session.nome.split(' ')[0] }} {{ session.nome.split(' ')[-1] }}</strong>
+            <small>{{ {'colaborador':'Colaborador','gestor':'Gestor','admin':'Administrador'}[session.perfil] }}</small>
+          </span>
+        </a>
+        <a href="{{ url_for('logout') }}" class="btn-sair" title="Encerrar sessão">
+          <i class="bi bi-box-arrow-right"></i></a>
+      </div>
+    </header>
+
+    <main class="conteudo">
+      {% with msgs = get_flashed_messages(with_categories=true) %}
+        {% for cat, m in msgs %}
+          <div class="alert alert-{{ cat }} alert-dismissible fade show" role="alert">
+            {{ m }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endwith %}
+      {% block conteudo %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Controle — TCC | Fabrício Carneiro Pena</title>
+<meta name="description" content="Global Controle — sistema web de ponto eletrônico (REP-P) e gestão de demandas, Trabalho de Conclusão de Curso em Sistemas de Informação de Fabrício Carneiro Pena.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --deep:#060c1a; --bg:#0a1628; --surface:#0f1e38; --surface-2:#162540;
+  --cyan:#00d4ff; --cyan-dim:rgba(0,212,255,0.10); --cyan-border:rgba(0,212,255,0.22);
+  --gw:#76B82A; --gw-dim:rgba(118,184,42,0.12); --gw-border:rgba(118,184,42,0.32); --gw-light:#A6D873;
+  --text:#e2e8f0; --muted:#7a93b4; --border:rgba(255,255,255,0.07);
+  --r:14px; --r-sm:9px;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;line-height:1.65;overflow-x:hidden;}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--deep);} ::-webkit-scrollbar-thumb{background:var(--gw);border-radius:4px;}
+.container{max-width:1080px;margin:0 auto;padding:0 24px;}
+a{color:inherit;}
+code{font-family:'JetBrains Mono',monospace;}
+
+/* Topbar */
+.topbar{position:sticky;top:0;z-index:40;background:rgba(6,12,26,0.85);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;max-width:1080px;margin:0 auto;gap:14px;}
+.topbar-brand{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1rem;white-space:nowrap;}
+.topbar-brand .dot{width:8px;height:8px;border-radius:50%;background:var(--gw);box-shadow:0 0 10px var(--gw);}
+
+/* botão padrão de retorno ao portfólio — cores fixas do site principal, iguais em todos os projetos */
+.portfolio-back-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 9px 16px !important;
+  background: #0a1628 !important;
+  color: #00d4ff !important;
+  border: 1px solid rgba(0,212,255,0.4) !important;
+  border-radius: 999px !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+  box-shadow: 0 0 0 1px rgba(0,212,255,0.08), 0 4px 14px rgba(0,0,0,0.25) !important;
+  transition: background .2s ease, box-shadow .2s ease, transform .2s ease !important;
+  line-height: 1 !important;
+}
+.portfolio-back-btn:hover {
+  background: #0f1e38 !important;
+  box-shadow: 0 0 0 1px rgba(0,212,255,0.3), 0 6px 20px rgba(0,212,255,0.2) !important;
+  transform: translateY(-1px) !important;
+}
+.portfolio-back-btn svg { flex-shrink: 0 !important; }
+@media (max-width:520px){
+  .portfolio-back-btn span{display:none;}
+  .portfolio-back-btn{padding:9px 11px !important;}
+}
+
+/* Hero */
+.hero{padding:64px 0 48px;border-bottom:1px solid var(--border);background:radial-gradient(ellipse 900px 400px at 50% -10%, var(--gw-dim), transparent);}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gw-light);background:var(--gw-dim);border:1px solid var(--gw-border);border-radius:999px;padding:6px 14px;margin-bottom:22px;}
+.hero h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(2.1rem,5vw,3rem);font-weight:700;line-height:1.1;margin-bottom:14px;}
+.hero h1 span{color:var(--gw-light);}
+.hero-tagline{font-size:1.05rem;color:var(--text);max-width:640px;margin-bottom:10px;font-weight:500;}
+.hero-desc{color:var(--muted);max-width:680px;font-size:0.97rem;margin-bottom:28px;}
+.hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:34px;}
+.btn{display:inline-flex;align-items:center;gap:9px;padding:12px 22px;border-radius:999px;font-weight:600;font-size:0.9rem;text-decoration:none;transition:transform .2s ease, box-shadow .2s ease;}
+.btn svg{width:16px;height:16px;flex-shrink:0;}
+.btn-primary{background:var(--gw);color:#08130a;box-shadow:0 6px 20px rgba(118,184,42,0.35);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(118,184,42,0.45);}
+.btn-ghost{background:var(--surface);color:var(--text);border:1px solid var(--border);}
+.btn-ghost:hover{transform:translateY(-2px);border-color:var(--cyan-border);}
+.btn-video{background:var(--cyan-dim);color:var(--cyan);border:1px solid var(--cyan-border);cursor:pointer;font-family:inherit;}
+.btn-video:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,212,255,0.18);}
+.hero-meta{display:flex;flex-wrap:wrap;gap:10px;}
+.meta-tag{font-family:'JetBrains Mono',monospace;font-size:0.74rem;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:6px 11px;}
+
+/* Sections */
+.section{padding:56px 0;border-bottom:1px solid var(--border);}
+.section:last-of-type{border-bottom:none;}
+.section-tag{display:block;font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--gw-light);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:10px;}
+.section-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.5rem,3.4vw,1.9rem);font-weight:700;margin-bottom:12px;}
+.section-sub{color:var(--muted);font-size:0.94rem;max-width:640px;margin-bottom:32px;}
+
+/* Screenshots */
+.shot-note{display:flex;align-items:flex-start;gap:8px;font-size:0.8rem;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 14px;margin-bottom:24px;}
+.shot-note strong{color:var(--gw-light);}
+.shots-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+.shot-card{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:var(--surface);}
+.shot-card img{display:block;width:100%;height:auto;border-bottom:1px solid var(--border);}
+.shot-label{padding:10px 14px;font-size:0.82rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.shot-label b{color:var(--text);font-family:'Inter',sans-serif;}
+
+/* Feature grid */
+.feat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+.feat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;}
+.feat-card .fi{font-size:1.3rem;margin-bottom:10px;display:block;}
+.feat-card h3{font-size:0.96rem;font-weight:600;margin-bottom:6px;}
+.feat-card p{font-size:0.85rem;color:var(--muted);}
+.feat-card code{font-size:0.78rem;background:var(--gw-dim);color:var(--gw-light);padding:1px 6px;border-radius:5px;}
+
+/* Table */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r);}
+table{width:100%;border-collapse:collapse;font-size:0.86rem;min-width:520px;}
+th,td{text-align:left;padding:10px 16px;border-bottom:1px solid var(--border);white-space:nowrap;}
+th{font-family:'JetBrains Mono',monospace;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--gw-light);background:var(--surface-2);}
+tr:last-child td{border-bottom:none;}
+td code{color:var(--cyan);}
+
+/* Stack */
+.stack-tags{display:flex;flex-wrap:wrap;gap:8px;}
+.stack-tag{font-family:'JetBrains Mono',monospace;font-size:0.78rem;background:var(--surface);border:1px solid var(--border);color:var(--muted);border-radius:999px;padding:7px 14px;}
+
+/* Run locally */
+.run-grid{display:grid;grid-template-columns:1.1fr 0.9fr;gap:24px;align-items:start;}
+pre{background:var(--deep);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;font-family:'JetBrains Mono',monospace;font-size:0.82rem;color:var(--gw-light);overflow-x:auto;line-height:1.7;}
+pre .c{color:var(--muted);}
+.cred-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;}
+.cred-card h4{font-size:0.8rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:12px;font-family:'JetBrains Mono',monospace;}
+.cred-row{display:flex;justify-content:space-between;gap:10px;font-size:0.84rem;padding:7px 0;border-bottom:1px solid var(--border);}
+.cred-row:last-child{border-bottom:none;}
+.cred-row span:first-child{color:var(--text);}
+.cred-row span:last-child{color:var(--muted);font-family:'JetBrains Mono',monospace;}
+
+/* Footer note */
+.doc-note{display:flex;align-items:flex-start;gap:9px;font-size:0.82rem;line-height:1.6;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;margin-top:8px;}
+.doc-note strong{color:var(--gw-light);font-weight:600;}
+
+.footer{padding:36px 0 60px;text-align:center;color:var(--muted);font-size:0.85rem;}
+.footer a{color:var(--cyan);text-decoration:none;}
+.footer a:hover{text-decoration:underline;}
+
+/* Video modal */
+.video-modal{display:none;position:fixed;inset:0;z-index:80;background:rgba(3,6,14,0.86);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:5vh 16px;}
+.video-modal.open{display:flex;}
+.video-modal-inner{width:100%;max-width:960px;background:var(--deep);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.6);}
+.video-modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);}
+.video-modal-head span{font-size:0.86rem;font-weight:600;color:var(--text);}
+.video-close-btn{background:none;border:none;color:var(--muted);font-size:1.3rem;line-height:1;cursor:pointer;padding:4px 8px;border-radius:6px;}
+.video-close-btn:hover{color:var(--text);background:var(--surface);}
+.video-modal video{display:block;width:100%;max-height:76vh;background:#000;}
+
+@media (max-width:760px){
+  .shots-grid,.feat-grid{grid-template-columns:1fr;}
+  .run-grid{grid-template-columns:1fr;}
+  .hero{padding:48px 0 36px;}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-brand"><span class="dot"></span> Global Controle — TCC</div>
+    <a href="../index.html#projetos" class="portfolio-back-btn" title="Voltar ao portfólio">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      <span>Voltar ao portfólio</span>
+    </a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <span class="hero-badge">🎓 Trabalho de Conclusão de Curso · Sistemas de Informação · Faculdade Projeção</span>
+    <h1>Global <span>Controle</span></h1>
+    <p class="hero-tagline">Inovação por resultado. Demandas e ponto eletrônico da sua equipe remota, em um só lugar.</p>
+    <p class="hero-desc">
+      Sistema web full stack que desenvolvi como TCC para a <strong>Globalweb Corp</strong> (empresa fictícia criada como cenário do projeto): integra <strong>controle de ponto eletrônico REP-P</strong> — em conformidade com a Portaria nº 671/2021 do MTE — com <strong>gestão de demandas</strong> de equipes remotas, unificando dois sistemas que normalmente ficam espalhados em planilhas e ferramentas soltas num único painel, com regras de negócio, papéis de acesso e auditoria implementados do zero.
+    </p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="../TCC/TCC_Global_Controle_Final_Fabricio_Carneiro_Pena_202117763_revisado_banca.pdf" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 15h6M9 11h6M9 19h4"/></svg>
+        Ler a documentação completa (PDF)
+      </a>
+      <a class="btn btn-ghost" href="https://github.com/FaPenna/portfolio-fabricio-pena/tree/main/TCC/global_controle" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 00-1.3-3.2 4.2 4.2 0 00-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 00-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 00-.1 3.2A4.6 4.6 0 004 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg>
+        Ver código-fonte
+      </a>
+      <button type="button" class="btn btn-video" id="open-video-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Ver o sistema em vídeo
+      </button>
+    </div>
+    <div class="hero-meta">
+      <span class="meta-tag">100% desenvolvido por mim — backend, frontend e banco de dados</span>
+      <span class="meta-tag">Versão revisada pela banca avaliadora</span>
+      <span class="meta-tag">11 telas · 9 usuários de demonstração</span>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <span class="section-tag">// prévia do sistema</span>
+    <h2 class="section-title">Telas em funcionamento</h2>
+    <p class="section-sub">Capturas reais do sistema rodando localmente com a base de demonstração (dados fictícios).</p>
+    <div class="shot-note">🔒 <span><strong>Dados fictícios</strong> — Globalweb Corp, colaboradores e registros exibidos foram criados apenas para demonstração do TCC.</span></div>
+    <div class="shots-grid" id="shots-grid">
+      <div class="shot-card"><img src="TCC_Global_Controle_screens/01-login.jpg" alt="Tela de login do Global Controle" loading="lazy"><div class="shot-label"><b>01 · Login</b> — /login</div></div>
+      <div class="shot-card"><img src="TCC_Global_Controle_screens/02-dashboard.jpg" alt="Dashboard executivo do Global Controle" loading="lazy"><div class="shot-label"><b>02 · Dashboard</b> — /</div></div>
+      <div class="shot-card"><img src="TCC_Global_Controle_screens/03-registrar-ponto.jpg" alt="Tela de registro de ponto eletrônico" loading="lazy"><div class="shot-label"><b>03 · Registro de Ponto</b> — /ponto</div></div>
+      <div class="shot-card"><img src="TCC_Global_Controle_screens/04-gerenciar-demandas.jpg" alt="Tela de gerenciamento de demandas" loading="lazy"><div class="shot-label"><b>04 · Gerenciar Demandas</b> — /gerenciar-demandas</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <span class="section-tag">// conformidade legal</span>
+    <h2 class="section-title">Portaria nº 671/2021 (REP-P)</h2>
+    <p class="section-sub">O núcleo técnico do TCC: um registro de ponto eletrônico que segue de fato as regras da legislação trabalhista para pontos por programa, não só a interface.</p>
+    <div class="feat-grid">
+      <div class="feat-card"><span class="fi">🔢</span><h3>NSR automático</h3><p>Número Sequencial de Registro gerado automaticamente por colaborador a cada marcação.</p></div>
+      <div class="feat-card"><span class="fi">🔐</span><h3>Hash SHA-256</h3><p>Cada marcação de ponto recebe um hash de integridade, tornando o registro imutável (RN003).</p></div>
+      <div class="feat-card"><span class="fi">🔁</span><h3>Sequência obrigatória</h3><p>Fluxo <code>entrada → pausa → retorno → saída</code> validado no backend a cada marcação (RN002).</p></div>
+      <div class="feat-card"><span class="fi">🪞</span><h3>Espelho de ponto</h3><p>Consulta do histórico de marcações disponível ao próprio trabalhador (UC005).</p></div>
+      <div class="feat-card"><span class="fi">📤</span><h3>Exportação do AFD</h3><p>Arquivo Fonte de Dados com cabeçalho, marcações e trailer nos formatos exigidos (UC006).</p></div>
+      <div class="feat-card"><span class="fi">📊</span><h3>Índice de aproveitamento</h3><p>Cruza % de jornada cumprida com % de demandas concluídas no prazo (RN009).</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <span class="section-tag">// gestão de demandas</span>
+    <h2 class="section-title">Além do ponto: gestão de equipe remota</h2>
+    <p class="section-sub">O segundo pilar do sistema — pensado para times distribuídos que precisam de visibilidade sobre o que cada pessoa está fazendo.</p>
+    <div class="feat-grid">
+      <div class="feat-card"><span class="fi">📋</span><h3>Demandas por todos os perfis</h3><p>Colaboradores criam e editam demandas próprias; gestores têm gestão completa, com reatribuição e mudança de status (RN005).</p></div>
+      <div class="feat-card"><span class="fi">🧑‍🤝‍🧑</span><h3>Acompanhamento de equipe</h3><p>Gestores e admins visualizam o desempenho e a produtividade de toda a equipe em um painel único.</p></div>
+      <div class="feat-card"><span class="fi">🧾</span><h3>Relatórios em Excel</h3><p>Geração de relatórios de jornada e produtividade via <code>openpyxl</code>, prontos para download.</p></div>
+      <div class="feat-card"><span class="fi">🔑</span><h3>Controle de acesso por papel</h3><p>Quatro perfis (colaborador, gestor, gestora e administrador) com permissões distintas em cada rota.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <span class="section-tag">// mapa do sistema</span>
+    <h2 class="section-title">Telas e rotas</h2>
+    <p class="section-sub">11 telas documentadas no Capítulo VI do TCC, cada uma com seu perfil de acesso.</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Tela</th><th>Rota</th><th>Perfil</th></tr></thead>
+        <tbody>
+          <tr><td>01 — Login</td><td><code>/login</code></td><td>todos</td></tr>
+          <tr><td>02 — Dashboard</td><td><code>/</code></td><td>todos</td></tr>
+          <tr><td>03 — Registro de Ponto</td><td><code>/ponto</code></td><td>todos</td></tr>
+          <tr><td>04 — Espelho de Ponto</td><td><code>/espelho</code></td><td>todos</td></tr>
+          <tr><td>05 — Acompanhar Demandas</td><td><code>/demandas</code></td><td>colaborador</td></tr>
+          <tr><td>06 — Gerenciar Demandas</td><td><code>/gerenciar-demandas</code></td><td>gestor/admin</td></tr>
+          <tr><td>07 — Acompanhar Equipe</td><td><code>/equipe</code></td><td>gestor/admin</td></tr>
+          <tr><td>08 — Gerar Relatórios</td><td><code>/relatorios</code></td><td>gestor/admin</td></tr>
+          <tr><td>09 — Gerenciar Usuários</td><td><code>/usuarios</code></td><td>admin</td></tr>
+          <tr><td>10 — Exportar AFD</td><td><code>/exportar-afd</code></td><td>admin</td></tr>
+          <tr><td>11 — Controle de Home Office</td><td><code>/aproveitamento</code></td><td>todos (gestor/admin veem a equipe)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <span class="section-tag">// stack técnica</span>
+    <h2 class="section-title">Tecnologias</h2>
+    <p class="section-sub">Aplicação server-side clássica — sem frameworks front-end, todo o backend e as regras de negócio escritos por mim.</p>
+    <div class="stack-tags">
+      <span class="stack-tag">Python 3</span>
+      <span class="stack-tag">Flask</span>
+      <span class="stack-tag">SQLite</span>
+      <span class="stack-tag">Jinja2</span>
+      <span class="stack-tag">HTML5 / CSS3</span>
+      <span class="stack-tag">Bootstrap 5</span>
+      <span class="stack-tag">openpyxl</span>
+      <span class="stack-tag">Autenticação por sessão</span>
+      <span class="stack-tag">SHA-256</span>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <span class="section-tag">// rodar localmente</span>
+    <h2 class="section-title">Como executar</h2>
+    <p class="section-sub">É uma aplicação Flask com backend real (login, sessão e banco de dados) — não roda como página estática. Para testar, clone o repositório e rode localmente:</p>
+    <div class="run-grid">
+      <pre><span class="c"># dentro de TCC/global_controle</span>
+python -m pip install -r requirements.txt
+python app.py
+
+<span class="c"># acesse</span>
+http://localhost:5000</pre>
+      <div class="cred-card">
+        <h4>Ambiente de demonstração</h4>
+        <div class="cred-row"><span>Administrador</span><span>admin@globalweb.com.br</span></div>
+        <div class="cred-row"><span>Gestora</span><span>mariana.souza@globalweb.com.br</span></div>
+        <div class="cred-row"><span>Colaborador</span><span>fabricio.pena@globalweb.com.br</span></div>
+        <div class="cred-row"><span>Senha (todos)</span><span>123456</span></div>
+      </div>
+    </div>
+    <div class="doc-note">📄 <span>A documentação completa do TCC — com todos os capítulos, regras de negócio, casos de uso e a versão revisada pela banca — está disponível no botão <strong>"Ler a documentação completa"</strong> no topo desta página.</span></div>
+  </div>
+</section>
+
+<div class="footer">
+  Trabalho de Conclusão de Curso em Sistemas de Informação — Faculdade Projeção · Desenvolvido por <strong>Fabrício Carneiro Pena</strong><br>
+  <a href="../index.html#projetos">← Voltar aos projetos</a>
+</div>
+
+<div class="video-modal" id="video-modal">
+  <div class="video-modal-inner">
+    <div class="video-modal-head">
+      <span>▶ Navegando pelo Global Controle — login, ponto e demandas</span>
+      <button type="button" class="video-close-btn" id="close-video-btn" aria-label="Fechar vídeo">✕</button>
+    </div>
+    <video id="demo-video" controls playsinline poster="TCC_Global_Controle_screens/02-dashboard.jpg">
+      <source src="TCC_Global_Controle_screens/demo-navegacao.webm" type="video/webm">
+      Seu navegador não suporta vídeo WebM — veja as capturas de tela na seção "Telas em funcionamento" acima.
+    </video>
+  </div>
+</div>
+
+<script>
+(() => {
+  const modal = document.getElementById('video-modal');
+  const video = document.getElementById('demo-video');
+  const openBtn = document.getElementById('open-video-btn');
+  const closeBtn = document.getElementById('close-video-btn');
+
+  function openModal(){
+    modal.classList.add('open');
+    video.currentTime = 0;
+    video.play().catch(() => {});
+  }
+  function closeModal(){
+    modal.classList.remove('open');
+    video.pause();
+  }
+
+  openBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('open')) closeModal(); });
+})();
+</script>
+
+</body>
+</html>

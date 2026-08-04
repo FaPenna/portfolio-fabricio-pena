@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block titulo %}Registrar ponto{% endblock %}
+{% block cabecalho %}Registrar ponto{% endblock %}
+{% block conteudo %}
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="relogio-painel">
+      <div class="relogio-hora mono" id="relogio">--:--:--</div>
+      <div class="relogio-data" id="relogio-data"></div>
+
+      {% if proxima %}
+        <form method="post">
+          <input type="hidden" name="tipo" value="{{ proxima }}">
+          <button class="btn-marcar">
+            <i class="bi bi-fingerprint me-2"></i>Registrar {{ ROTULO_PONTO[proxima]|lower }}
+          </button>
+        </form>
+        <div class="mt-3" style="color:#9FB8D6;font-size:.8rem">
+          Sequência do dia: entrada → pausa → retorno → saída
+        </div>
+      {% else %}
+        <button class="btn-marcar" disabled><i class="bi bi-check2-circle me-2"></i>Jornada encerrada</button>
+        <div class="mt-3" style="color:#9FB8D6;font-size:.8rem">Todas as marcações de hoje foram registradas.</div>
+      {% endif %}
+    </div>
+
+    <div class="cartao mt-3" style="font-size:.82rem;color:#66708A">
+      <i class="bi bi-shield-check me-1" style="color:var(--verde)"></i>
+      Cada marcação recebe um <strong>NSR</strong> sequencial e um <strong>hash de integridade</strong>,
+      tornando o registro imutável após a confirmação — conforme exigido para sistemas
+      <strong>REP-P</strong> pela Portaria nº 671/2021 do MTE.
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="cartao h-100">
+      <div class="cartao-titulo"><i class="bi bi-clock"></i> Marcações de hoje</div>
+      {% if regs %}
+        <ul class="linha-tempo">
+          {% for r in regs %}
+          <li>
+            <span class="lt-ponto"></span>
+            <span class="lt-hora">{{ r.data_hora[11:16] }}</span>
+            <span class="selo selo-tipo-{{ r.tipo }}">{{ ROTULO_PONTO[r.tipo] }}</span>
+            <span class="lt-nsr mono">NSR {{ '%06d'|format(r.nsr) }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="vazio"><i class="bi bi-fingerprint"></i>Nenhuma marcação hoje.<br>Registre sua entrada para iniciar a jornada.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function tick() {
+  const n = new Date();
+  document.getElementById('relogio').textContent =
+    n.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('relogio-data').textContent =
+    n.toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+}
+tick(); setInterval(tick, 1000);
+</script>
+{% endblock %}

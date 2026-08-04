@@ -1,0 +1,2642 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Python Academy RPG — Aprenda Python Jogando</title>
+<meta name="description" content="Plataforma gamificada para aprender Python do zero ao avançado, em formato RPG.">
+<style>
+/* =====================================================================
+   1. RESET
+===================================================================== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{min-height:100vh;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;overflow-x:hidden;}
+img,svg{display:block;max-width:100%;}
+button,input,textarea,select{font:inherit;color:inherit;background:none;border:none;outline:none;}
+button{cursor:pointer;}
+a{color:inherit;text-decoration:none;}
+ul,ol{list-style:none;}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--neon-cyan),var(--neon-purple));border-radius:10px;}
+
+/* =====================================================================
+   2. DESIGN TOKENS
+===================================================================== */
+:root{
+  --bg-0:#05060c;
+  --bg-1:#0a0c18;
+  --bg-2:#0f1224;
+  --glass:rgba(255,255,255,0.045);
+  --glass-strong:rgba(255,255,255,0.08);
+  --border-glass:rgba(255,255,255,0.09);
+  --text-1:#eef0fb;
+  --text-2:#a2a8c3;
+  --text-3:#666d8c;
+  --neon-cyan:#00e5ff;
+  --neon-purple:#a855f7;
+  --neon-pink:#ff3fa4;
+  --neon-green:#39ff9d;
+  --neon-orange:#ffb020;
+  --grad-primary:linear-gradient(135deg,var(--neon-cyan),var(--neon-purple));
+  --grad-fire:linear-gradient(135deg,var(--neon-pink),var(--neon-orange));
+  --grad-gold:linear-gradient(135deg,#ffd76a,#ff9f43);
+  --success:#39ff9d;
+  --warning:#ffb020;
+  --danger:#ff4d6d;
+  --radius-sm:10px;
+  --radius-md:16px;
+  --radius-lg:24px;
+  --radius-xl:32px;
+  --shadow-glass:0 8px 32px rgba(0,0,0,0.45);
+  --shadow-neon-cyan:0 0 24px rgba(0,229,255,0.35);
+  --shadow-neon-purple:0 0 24px rgba(168,85,247,0.35);
+  --ease:cubic-bezier(.22,1,.36,1);
+  --sidebar-w:260px;
+  --sidebar-w-collapsed:78px;
+  --topbar-h:76px;
+}
+:root[data-theme="light"]{
+  --bg-0:#eef1fb;
+  --bg-1:#e4e8f8;
+  --bg-2:#dde2f5;
+  --glass:rgba(255,255,255,0.55);
+  --glass-strong:rgba(255,255,255,0.75);
+  --border-glass:rgba(20,20,40,0.08);
+  --text-1:#12142b;
+  --text-2:#454a68;
+  --text-3:#7a7f9e;
+  --shadow-glass:0 8px 32px rgba(30,30,60,0.12);
+}
+
+/* =====================================================================
+   3. LAYOUT BASE
+===================================================================== */
+body{
+  background:var(--bg-0);
+  color:var(--text-1);
+  transition:background .4s var(--ease),color .4s var(--ease);
+  position:relative;
+}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+#confetti-canvas{position:fixed;inset:0;z-index:9999;pointer-events:none;}
+#cursor-glow{
+  position:fixed;width:420px;height:420px;border-radius:50%;pointer-events:none;z-index:1;
+  background:radial-gradient(circle,rgba(0,229,255,0.10),rgba(168,85,247,0.06) 40%,transparent 70%);
+  transform:translate(-50%,-50%);transition:opacity .3s;left:-999px;top:-999px;
+}
+.app{position:relative;z-index:2;display:flex;min-height:100vh;}
+
+/* Sidebar */
+.sidebar{
+  width:var(--sidebar-w);flex-shrink:0;height:100vh;position:sticky;top:0;
+  background:var(--glass);backdrop-filter:blur(24px) saturate(140%);
+  border-right:1px solid var(--border-glass);
+  display:flex;flex-direction:column;padding:20px 14px;gap:18px;
+  transition:width .35s var(--ease);z-index:50;
+}
+.sidebar.collapsed{width:var(--sidebar-w-collapsed);}
+.sidebar-brand{display:flex;align-items:center;gap:12px;padding:6px 8px;}
+.brand-logo{
+  width:42px;height:42px;border-radius:12px;background:var(--grad-primary);
+  display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;
+  box-shadow:var(--shadow-neon-cyan);
+}
+.brand-text{font-weight:800;font-size:16px;letter-spacing:.3px;white-space:nowrap;overflow:hidden;}
+.brand-text small{display:block;font-weight:500;font-size:11px;color:var(--text-2);}
+.sidebar.collapsed .brand-text,.sidebar.collapsed .nav-label,.sidebar.collapsed .sidebar-foot-text{display:none;}
+
+.sidebar-toggle{
+  position:absolute;top:26px;right:-14px;width:28px;height:28px;border-radius:50%;
+  background:var(--bg-2);border:1px solid var(--border-glass);display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow-glass);transition:transform .3s var(--ease);z-index:60;
+}
+.sidebar.collapsed .sidebar-toggle{transform:rotate(180deg);}
+
+.nav-group{display:flex;flex-direction:column;gap:4px;flex:1;overflow-y:auto;}
+.nav-group::-webkit-scrollbar{width:4px;}
+.nav-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-3);padding:14px 10px 4px;}
+.nav-item{
+  display:flex;align-items:center;gap:14px;padding:11px 12px;border-radius:var(--radius-sm);
+  color:var(--text-2);font-weight:600;font-size:14px;position:relative;transition:all .25s var(--ease);white-space:nowrap;
+}
+.nav-item .nav-icon{width:22px;text-align:center;font-size:17px;flex-shrink:0;}
+.nav-item:hover{background:var(--glass-strong);color:var(--text-1);transform:translateX(3px);}
+.nav-item.active{background:linear-gradient(90deg,rgba(0,229,255,0.16),rgba(168,85,247,0.10));color:var(--text-1);box-shadow:inset 0 0 0 1px rgba(0,229,255,0.25);}
+.nav-item.active::before{content:"";position:absolute;left:-14px;top:50%;transform:translateY(-50%);width:4px;height:60%;border-radius:4px;background:var(--grad-primary);}
+.sidebar-foot{border-top:1px solid var(--border-glass);padding-top:14px;}
+.streak-pill{display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--radius-sm);background:var(--glass-strong);}
+
+/* Topbar */
+.main-wrap{flex:1;min-width:0;display:flex;flex-direction:column;}
+.topbar{
+  height:var(--topbar-h);flex-shrink:0;display:flex;align-items:center;gap:16px;
+  padding:0 26px;background:var(--glass);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border-glass);position:sticky;top:0;z-index:40;
+}
+.hamburger{display:none;width:38px;height:38px;border-radius:10px;background:var(--glass-strong);align-items:center;justify-content:center;font-size:18px;}
+.search-wrap{position:relative;flex:1;max-width:420px;}
+.search-input{
+  width:100%;padding:11px 16px 11px 42px;border-radius:999px;background:var(--glass-strong);
+  border:1px solid var(--border-glass);font-size:14px;transition:box-shadow .3s;
+}
+.search-input:focus{box-shadow:0 0 0 3px rgba(0,229,255,0.18);}
+.search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);opacity:.6;}
+.search-results{
+  position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--bg-2);border:1px solid var(--border-glass);
+  border-radius:var(--radius-md);box-shadow:var(--shadow-glass);max-height:360px;overflow-y:auto;display:none;z-index:80;
+}
+.search-results.show{display:block;}
+.search-result-item{padding:12px 16px;display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--border-glass);font-size:13px;}
+.search-result-item:hover{background:var(--glass-strong);}
+.search-result-item small{color:var(--text-3);display:block;}
+
+.topbar-stats{display:flex;align-items:center;gap:10px;margin-left:auto;}
+.stat-pill{
+  display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:var(--glass-strong);
+  border:1px solid var(--border-glass);font-weight:700;font-size:13px;transition:transform .25s var(--ease);
+}
+.stat-pill:hover{transform:translateY(-2px);}
+.stat-pill.coins{color:var(--neon-orange);}
+.stat-pill.streak{color:var(--neon-pink);}
+.stat-pill.level{color:var(--neon-cyan);}
+.icon-btn{width:40px;height:40px;border-radius:12px;background:var(--glass-strong);border:1px solid var(--border-glass);display:flex;align-items:center;justify-content:center;font-size:16px;transition:transform .25s var(--ease),box-shadow .25s;}
+.icon-btn:hover{transform:translateY(-2px) scale(1.05);box-shadow:var(--shadow-neon-cyan);}
+.avatar-chip{
+  width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;
+  background:var(--grad-primary);box-shadow:var(--shadow-neon-purple);flex-shrink:0;border:2px solid rgba(255,255,255,0.15);
+}
+
+/* Content */
+.content{flex:1;padding:28px 32px 60px;position:relative;}
+.page{display:none;animation:fadeSlideIn .5s var(--ease);}
+.page.active{display:block;}
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:26px;}
+.page-title{font-size:26px;font-weight:800;letter-spacing:-.3px;}
+.page-title span{background:var(--grad-primary);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.page-sub{color:var(--text-2);font-size:14px;margin-top:4px;}
+
+/* Glass card base */
+.card{
+  background:var(--glass);backdrop-filter:blur(18px) saturate(140%);border:1px solid var(--border-glass);
+  border-radius:var(--radius-lg);box-shadow:var(--shadow-glass);padding:22px;position:relative;overflow:hidden;
+  transition:transform .3s var(--ease),box-shadow .3s var(--ease),border-color .3s;
+}
+.card::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.06),transparent 40%);pointer-events:none;}
+.card.tilt{will-change:transform;}
+.card.hoverable:hover{border-color:rgba(0,229,255,0.35);box-shadow:var(--shadow-glass),0 0 30px rgba(0,229,255,0.12);}
+
+.grid{display:grid;gap:20px;}
+.grid-2{grid-template-columns:repeat(2,1fr);}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+.grid-4{grid-template-columns:repeat(4,1fr);}
+.grid-auto{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));}
+
+/* Buttons */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 22px;border-radius:999px;
+  font-weight:700;font-size:14px;transition:all .3s var(--ease);position:relative;overflow:hidden;
+}
+.btn-primary{background:var(--grad-primary);color:#04121a;box-shadow:0 6px 20px rgba(0,229,255,0.25);}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,229,255,0.4);}
+.btn-ghost{background:var(--glass-strong);border:1px solid var(--border-glass);}
+.btn-ghost:hover{border-color:var(--neon-cyan);transform:translateY(-2px);}
+.btn-gold{background:var(--grad-gold);color:#2a1600;}
+.btn-gold:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(255,159,67,0.35);}
+.btn-danger{background:rgba(255,77,109,0.15);color:var(--danger);border:1px solid rgba(255,77,109,0.4);}
+.btn-sm{padding:8px 16px;font-size:12px;}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+.btn::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,0.35),transparent 60%);opacity:0;transition:opacity .3s;}
+.btn:hover::after{opacity:1;}
+
+/* XP bar */
+.xp-bar-track{width:100%;height:14px;border-radius:999px;background:rgba(255,255,255,0.07);overflow:hidden;position:relative;box-shadow:inset 0 0 0 1px var(--border-glass);}
+.xp-bar-fill{height:100%;border-radius:999px;background:var(--grad-primary);position:relative;transition:width 1s var(--ease);box-shadow:0 0 14px rgba(0,229,255,0.6);}
+.xp-bar-fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.5),transparent);animation:shimmer 2.2s infinite;}
+@keyframes shimmer{from{transform:translateX(-100%);}to{transform:translateX(100%);}}
+
+/* Progress ring */
+.ring-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
+.ring-label{position:absolute;text-align:center;}
+.ring-label b{font-size:20px;display:block;}
+.ring-label span{font-size:10px;color:var(--text-2);}
+
+/* Dashboard specific */
+.hero-card{grid-column:span 2;background:linear-gradient(135deg,rgba(0,229,255,0.08),rgba(168,85,247,0.08));}
+.stat-tile{display:flex;flex-direction:column;gap:6px;}
+.stat-tile .tile-icon{font-size:26px;}
+.stat-tile .tile-value{font-size:24px;font-weight:800;}
+.stat-tile .tile-label{font-size:12px;color:var(--text-2);}
+.mission-card{border-left:3px solid var(--neon-green);}
+.goal-card{border-left:3px solid var(--neon-purple);}
+
+/* Learning Map */
+.map-wrap{position:relative;padding:40px 20px;overflow-x:auto;}
+.map-path{position:relative;min-width:900px;}
+.map-svg-lines{position:absolute;inset:0;z-index:0;}
+.planet-grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(4,1fr);gap:60px 40px;padding:20px 0;}
+.planet{
+  display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:transform .3s var(--ease);
+}
+.planet:hover{transform:translateY(-6px) scale(1.05);}
+.planet-orb{
+  width:86px;height:86px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;
+  position:relative;transition:all .35s var(--ease);
+}
+.planet.locked .planet-orb{background:rgba(255,255,255,0.04);border:2px dashed var(--border-glass);color:var(--text-3);filter:grayscale(1);}
+.planet.unlocked .planet-orb{background:radial-gradient(circle at 30% 30%,#1c2440,#0a0e1e);border:2px solid var(--neon-cyan);box-shadow:0 0 26px rgba(0,229,255,0.45);animation:floaty 4s ease-in-out infinite;}
+.planet.completed .planet-orb{background:radial-gradient(circle at 30% 30%,#1e3a2c,#08150f);border:2px solid var(--neon-green);box-shadow:0 0 26px rgba(57,255,157,0.45);}
+.planet.completed .planet-orb::after{content:"✓";position:absolute;bottom:-4px;right:-4px;width:26px;height:26px;border-radius:50%;background:var(--neon-green);color:#04150c;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;}
+@keyframes floaty{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+.planet-name{font-size:12px;font-weight:700;text-align:center;max-width:110px;}
+.planet-num{font-size:10px;color:var(--text-3);}
+
+/* Lesson page */
+.lesson-header{display:flex;align-items:center;gap:16px;margin-bottom:20px;}
+.lesson-icon{width:60px;height:60px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--grad-primary);box-shadow:var(--shadow-neon-cyan);}
+.tabs{display:flex;gap:8px;border-bottom:1px solid var(--border-glass);margin-bottom:18px;flex-wrap:wrap;}
+.tab-btn{padding:10px 18px;font-weight:700;font-size:13px;color:var(--text-2);border-bottom:2px solid transparent;transition:all .25s;}
+.tab-btn.active{color:var(--text-1);border-color:var(--neon-cyan);}
+.tab-panel{display:none;line-height:1.7;font-size:14.5px;color:var(--text-2);}
+.tab-panel.active{display:block;animation:fadeSlideIn .4s var(--ease);}
+.tab-panel h4{color:var(--text-1);margin:16px 0 8px;font-size:15px;}
+.tab-panel p{margin-bottom:10px;}
+.tab-panel ul{margin:8px 0 8px 20px;list-style:disc;}
+code.inline{background:var(--glass-strong);padding:2px 7px;border-radius:6px;font-family:'Consolas',monospace;color:var(--neon-cyan);font-size:13px;}
+.code-block{background:#0a0d18;border:1px solid var(--border-glass);border-radius:var(--radius-md);padding:16px 18px;font-family:'Consolas',monospace;font-size:13px;color:#c8ceee;overflow-x:auto;margin:12px 0;white-space:pre;}
+.code-block .kw{color:#ff79c6;}
+.code-block .str{color:#8be9fd;}
+.code-block .com{color:#6272a4;}
+.code-block .num{color:#bd93f9;}
+.code-block .fn{color:#50fa7b;}
+.output-block{background:#04120a;border:1px solid rgba(57,255,157,0.25);border-radius:var(--radius-md);padding:14px 18px;font-family:'Consolas',monospace;font-size:13px;color:var(--neon-green);margin-top:8px;white-space:pre-wrap;}
+.callout{border-radius:var(--radius-md);padding:14px 16px;margin:14px 0;font-size:13.5px;border-left:3px solid;}
+.callout.tip{background:rgba(57,255,157,0.06);border-color:var(--neon-green);}
+.callout.warn{background:rgba(255,176,32,0.07);border-color:var(--neon-orange);}
+.callout.fun{background:rgba(168,85,247,0.08);border-color:var(--neon-purple);}
+.diagram-wrap{display:flex;justify-content:center;padding:20px;background:rgba(255,255,255,0.02);border-radius:var(--radius-md);margin:14px 0;}
+.checklist-item{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:13.5px;}
+.checklist-item input{width:18px;height:18px;accent-color:var(--neon-cyan);}
+
+/* Quiz */
+.quiz-q{font-weight:700;font-size:15px;margin-bottom:14px;}
+.quiz-opt{display:block;width:100%;text-align:left;padding:13px 16px;border-radius:var(--radius-sm);background:var(--glass-strong);border:1px solid var(--border-glass);margin-bottom:10px;transition:all .25s;font-size:13.5px;}
+.quiz-opt:hover{border-color:var(--neon-cyan);}
+.quiz-opt.correct{background:rgba(57,255,157,0.15);border-color:var(--neon-green);}
+.quiz-opt.wrong{background:rgba(255,77,109,0.15);border-color:var(--danger);}
+.quiz-progress{display:flex;gap:6px;margin-bottom:16px;}
+.quiz-progress span{flex:1;height:5px;border-radius:4px;background:var(--glass-strong);}
+.quiz-progress span.done{background:var(--grad-primary);}
+
+/* Editor */
+.editor-shell{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.editor-panel{background:#0a0d18;border-radius:var(--radius-lg);border:1px solid var(--border-glass);overflow:hidden;}
+.editor-topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#0e1220;border-bottom:1px solid var(--border-glass);}
+.editor-dots span{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;}
+.editor-body{display:flex;height:420px;}
+.editor-gutter{width:44px;background:#080a14;color:#454c6b;font-family:Consolas,monospace;font-size:13px;line-height:22px;padding:14px 0;text-align:right;padding-right:10px;user-select:none;overflow:hidden;}
+.editor-textarea-wrap{position:relative;flex:1;}
+#code-input{width:100%;height:100%;padding:14px;font-family:Consolas,monospace;font-size:13px;line-height:22px;background:transparent;color:#e8eaff;resize:none;white-space:pre;overflow:auto;}
+.editor-output{background:#050810;height:420px;padding:16px;font-family:Consolas,monospace;font-size:13px;color:var(--neon-green);overflow-y:auto;white-space:pre-wrap;}
+.editor-output .err{color:var(--danger);}
+.editor-actions{display:flex;gap:10px;padding:12px 16px;border-top:1px solid var(--border-glass);}
+.snippet-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+.snippet-chip{padding:7px 14px;border-radius:999px;background:var(--glass-strong);border:1px solid var(--border-glass);font-size:12px;font-weight:600;}
+.snippet-chip:hover{border-color:var(--neon-purple);}
+
+/* Badges / achievements */
+.badge-card{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:24px 14px;}
+.badge-orb{width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;}
+.badge-card.locked .badge-orb{background:rgba(255,255,255,0.05);filter:grayscale(1) opacity(.5);}
+.badge-card.unlocked .badge-orb{background:var(--grad-gold);box-shadow:0 0 22px rgba(255,159,67,0.5);}
+.badge-name{font-weight:700;font-size:13px;}
+.badge-desc{font-size:11px;color:var(--text-3);}
+
+/* Shop */
+.shop-item{display:flex;flex-direction:column;gap:12px;}
+.shop-preview{height:90px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:36px;}
+.price-tag{display:flex;align-items:center;gap:6px;font-weight:800;color:var(--neon-orange);}
+
+/* Avatar builder */
+.avatar-big{width:130px;height:130px;border-radius:32px;display:flex;align-items:center;justify-content:center;font-size:60px;margin:0 auto 18px;box-shadow:0 0 34px rgba(0,229,255,0.35);}
+.swatch-row{display:flex;gap:10px;flex-wrap:wrap;}
+.swatch{width:36px;height:36px;border-radius:50%;border:2px solid transparent;transition:transform .2s;}
+.swatch.active{border-color:#fff;transform:scale(1.15);}
+.icon-pick{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;}
+.icon-opt{aspect-ratio:1;border-radius:14px;background:var(--glass-strong);display:flex;align-items:center;justify-content:center;font-size:22px;border:2px solid transparent;}
+.icon-opt.active{border-color:var(--neon-cyan);}
+
+/* Ranking */
+.rank-row{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:var(--radius-md);margin-bottom:8px;background:var(--glass-strong);}
+.rank-row.me{border:1px solid var(--neon-cyan);box-shadow:0 0 16px rgba(0,229,255,0.2);}
+.rank-pos{width:30px;text-align:center;font-weight:800;color:var(--text-2);}
+.rank-row:nth-child(1) .rank-pos{color:#ffd76a;}
+.rank-row:nth-child(2) .rank-pos{color:#c8ccd6;}
+.rank-row:nth-child(3) .rank-pos{color:#e0a06a;}
+
+/* Stats */
+.chart-card canvas{width:100%!important;height:220px!important;}
+.heatmap{display:grid;grid-template-columns:repeat(26,1fr);gap:4px;}
+.heat-cell{aspect-ratio:1;border-radius:3px;background:rgba(255,255,255,0.05);}
+
+/* Toast */
+#toast-container{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:10px;z-index:9998;}
+.toast{padding:14px 20px;border-radius:var(--radius-md);background:var(--bg-2);border:1px solid var(--border-glass);box-shadow:var(--shadow-glass);font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:10px;animation:toastIn .4s var(--ease);min-width:240px;}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);}}
+
+/* Level up overlay */
+#levelup-overlay{position:fixed;inset:0;z-index:9997;display:none;align-items:center;justify-content:center;background:rgba(2,3,10,0.75);backdrop-filter:blur(6px);}
+#levelup-overlay.show{display:flex;}
+.levelup-card{text-align:center;padding:50px 60px;border-radius:var(--radius-xl);background:var(--glass-strong);border:1px solid var(--neon-cyan);box-shadow:0 0 60px rgba(0,229,255,0.4);animation:popIn .5s var(--ease);}
+@keyframes popIn{from{opacity:0;transform:scale(.7);}to{opacity:1;transform:scale(1);}}
+.levelup-card h2{font-size:34px;background:var(--grad-gold);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:8px;}
+
+/* Pomodoro widget */
+#pomodoro-widget{position:fixed;bottom:24px;left:24px;z-index:60;background:var(--glass-strong);backdrop-filter:blur(20px);border:1px solid var(--border-glass);border-radius:var(--radius-lg);padding:16px 18px;box-shadow:var(--shadow-glass);width:200px;display:none;}
+#pomodoro-widget.show{display:block;}
+.pomo-time{font-size:28px;font-weight:800;text-align:center;margin:8px 0;}
+.pomo-actions{display:flex;gap:8px;}
+
+/* Modal */
+.modal-backdrop{position:fixed;inset:0;background:rgba(2,3,10,0.7);backdrop-filter:blur(4px);z-index:9990;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-backdrop.show{display:flex;}
+.modal-box{background:var(--bg-2);border:1px solid var(--border-glass);border-radius:var(--radius-lg);max-width:480px;width:100%;padding:28px;box-shadow:var(--shadow-glass);}
+
+/* Utility */
+.flex{display:flex;}
+.flex-col{display:flex;flex-direction:column;}
+.items-center{align-items:center;}
+.justify-between{justify-content:space-between;}
+.gap-8{gap:8px;}
+.gap-12{gap:12px;}
+.gap-16{gap:16px;}
+.mt-8{margin-top:8px;}
+.mt-16{margin-top:16px;}
+.mt-24{margin-top:24px;}
+.text-2{color:var(--text-2);}
+.text-3{color:var(--text-3);}
+.small{font-size:12px;}
+.w-full{width:100%;}
+.hidden{display:none!important;}
+.star-btn{font-size:20px;color:var(--text-3);transition:transform .2s;}
+.star-btn.active{color:var(--neon-orange);text-shadow:0 0 12px rgba(255,176,32,0.7);}
+.star-btn:hover{transform:scale(1.2);}
+.locked-banner{text-align:center;padding:60px 20px;}
+.locked-banner .big-icon{font-size:60px;margin-bottom:14px;}
+
+/* =====================================================================
+   4. RESPONSIVIDADE
+===================================================================== */
+@media (max-width:1100px){
+  .grid-4{grid-template-columns:repeat(2,1fr);}
+  .grid-3{grid-template-columns:repeat(2,1fr);}
+  .hero-card{grid-column:span 2;}
+  .editor-shell{grid-template-columns:1fr;}
+}
+@media (max-width:860px){
+  .sidebar{position:fixed;left:-100%;top:0;height:100vh;box-shadow:var(--shadow-glass);}
+  .sidebar.mobile-open{left:0;}
+  .hamburger{display:flex;}
+  .search-wrap{max-width:none;}
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}
+  .hero-card{grid-column:span 1;}
+  .topbar-stats .stat-pill span.pill-label{display:none;}
+  .content{padding:20px 16px 50px;}
+}
+@media (max-width:520px){
+  .topbar{padding:0 14px;gap:10px;}
+  .search-wrap{display:none;}
+  .planet-grid{grid-template-columns:repeat(2,1fr);}
+  #pomodoro-widget{left:12px;right:12px;width:auto;bottom:12px;}
+}
+@media (max-width:480px){
+  .portfolio-back-btn span{ display:none; }
+  .portfolio-back-btn{ padding:9px 11px !important; }
+}
+
+/* botão padrão de retorno ao portfólio — cores fixas do site principal, iguais em todos os projetos */
+.portfolio-back-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 9px 16px !important;
+  background: #0a1628 !important;
+  color: #00d4ff !important;
+  border: 1px solid rgba(0,212,255,0.4) !important;
+  border-radius: 999px !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+  box-shadow: 0 0 0 1px rgba(0,212,255,0.08), 0 4px 14px rgba(0,0,0,0.25) !important;
+  transition: background .2s ease, box-shadow .2s ease, transform .2s ease !important;
+  line-height: 1 !important;
+}
+.portfolio-back-btn:hover {
+  background: #0f1e38 !important;
+  box-shadow: 0 0 0 1px rgba(0,212,255,0.3), 0 6px 20px rgba(0,212,255,0.2) !important;
+  transform: translateY(-1px) !important;
+}
+.portfolio-back-btn svg { flex-shrink: 0 !important; }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div id="cursor-glow"></div>
+<canvas id="confetti-canvas"></canvas>
+
+<div class="app" id="app">
+
+  <!-- ============================ SIDEBAR ============================ -->
+  <aside class="sidebar" id="sidebar">
+    <button class="sidebar-toggle" id="sidebar-toggle-btn">◀</button>
+    <div class="sidebar-brand">
+      <div class="brand-logo">🐍</div>
+      <div class="brand-text">Python Academy<small>RPG Edition</small></div>
+    </div>
+
+    <nav class="nav-group">
+      <div class="nav-title">Jornada</div>
+      <a class="nav-item active" data-page="dashboard"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a>
+      <a class="nav-item" data-page="map"><span class="nav-icon">🗺️</span><span class="nav-label">Mapa de Aprendizado</span></a>
+      <a class="nav-item" data-page="editor"><span class="nav-icon">💻</span><span class="nav-label">Editor de Código</span></a>
+      <a class="nav-item" data-page="challenges"><span class="nav-icon">⚔️</span><span class="nav-label">Desafios</span></a>
+      <a class="nav-item" data-page="projects"><span class="nav-icon">🚀</span><span class="nav-label">Projetos</span></a>
+
+      <div class="nav-title">Recursos</div>
+      <a class="nav-item" data-page="library"><span class="nav-icon">📚</span><span class="nav-label">Biblioteca</span></a>
+      <a class="nav-item" data-page="courses"><span class="nav-icon">🎓</span><span class="nav-label">Cursos Gratuitos</span></a>
+
+      <div class="nav-title">Personagem</div>
+      <a class="nav-item" data-page="avatar"><span class="nav-icon">🧙</span><span class="nav-label">Avatar</span></a>
+      <a class="nav-item" data-page="shop"><span class="nav-icon">🛒</span><span class="nav-label">Loja</span></a>
+      <a class="nav-item" data-page="achievements"><span class="nav-icon">🏆</span><span class="nav-label">Conquistas</span></a>
+      <a class="nav-item" data-page="ranking"><span class="nav-icon">📊</span><span class="nav-label">Ranking</span></a>
+      <a class="nav-item" data-page="stats"><span class="nav-icon">📈</span><span class="nav-label">Estatísticas</span></a>
+      <a class="nav-item" data-page="settings"><span class="nav-icon">⚙️</span><span class="nav-label">Configurações</span></a>
+    </nav>
+
+    <div class="sidebar-foot flex-col gap-12">
+      <button class="streak-pill" id="pomodoro-open-btn">
+        <span class="nav-icon">⏱️</span><span class="sidebar-foot-text small">Pomodoro</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ============================ MAIN ============================ -->
+  <div class="main-wrap">
+    <header class="topbar">
+      <button class="hamburger" id="hamburger-btn">☰</button>
+      <div class="search-wrap">
+        <span class="search-icon">🔎</span>
+        <input class="search-input" id="global-search" placeholder="Buscar aulas, projetos, cursos..." autocomplete="off">
+        <div class="search-results" id="search-results"></div>
+      </div>
+      <div class="topbar-stats">
+        <div class="stat-pill level"><span>⭐</span><span id="topbar-level">Nv. 1</span></div>
+        <div class="stat-pill coins"><span>🪙</span><span id="topbar-coins">0</span></div>
+        <div class="stat-pill streak"><span>🔥</span><span id="topbar-streak">0</span><span class="pill-label">dias</span></div>
+        <button class="icon-btn" id="theme-toggle-btn" title="Alternar tema">🌙</button>
+        <div class="avatar-chip" id="topbar-avatar">🧙</div>
+        <a href="../index.html#projetos" class="portfolio-back-btn" title="Voltar ao portfólio">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          <span>Voltar ao portfólio</span>
+        </a>
+      </div>
+    </header>
+
+    <main class="content" id="content">
+
+      <!-- ===================== DASHBOARD ===================== -->
+      <section class="page active" id="page-dashboard"></section>
+
+      <!-- ===================== MAPA ===================== -->
+      <section class="page" id="page-map"></section>
+
+      <!-- ===================== LESSON ===================== -->
+      <section class="page" id="page-lesson"></section>
+
+      <!-- ===================== EDITOR ===================== -->
+      <section class="page" id="page-editor"></section>
+
+      <!-- ===================== DESAFIOS ===================== -->
+      <section class="page" id="page-challenges"></section>
+
+      <!-- ===================== PROJETOS ===================== -->
+      <section class="page" id="page-projects"></section>
+
+      <!-- ===================== BIBLIOTECA ===================== -->
+      <section class="page" id="page-library"></section>
+
+      <!-- ===================== CURSOS ===================== -->
+      <section class="page" id="page-courses"></section>
+
+      <!-- ===================== AVATAR ===================== -->
+      <section class="page" id="page-avatar"></section>
+
+      <!-- ===================== LOJA ===================== -->
+      <section class="page" id="page-shop"></section>
+
+      <!-- ===================== CONQUISTAS ===================== -->
+      <section class="page" id="page-achievements"></section>
+
+      <!-- ===================== RANKING ===================== -->
+      <section class="page" id="page-ranking"></section>
+
+      <!-- ===================== STATS ===================== -->
+      <section class="page" id="page-stats"></section>
+
+      <!-- ===================== SETTINGS ===================== -->
+      <section class="page" id="page-settings"></section>
+
+    </main>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<div id="levelup-overlay">
+  <div class="levelup-card">
+    <div style="font-size:54px;">🎉</div>
+    <h2>LEVEL UP!</h2>
+    <p class="text-2" id="levelup-text">Você alcançou o nível 2</p>
+    <button class="btn btn-primary mt-24" id="levelup-close-btn">Continuar</button>
+  </div>
+</div>
+
+<div id="pomodoro-widget">
+  <div class="flex justify-between items-center">
+    <strong class="small">🍅 Pomodoro</strong>
+    <button class="icon-btn" id="pomodoro-close-btn" style="width:26px;height:26px;font-size:12px;">✕</button>
+  </div>
+  <div class="pomo-time" id="pomo-display">25:00</div>
+  <div class="pomo-actions">
+    <button class="btn btn-primary btn-sm w-full" id="pomo-start-btn">Iniciar</button>
+    <button class="btn btn-ghost btn-sm" id="pomo-reset-btn">↺</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal-box" id="modal-box"></div>
+</div>
+
+<script>
+/* =====================================================================
+   PYTHON ACADEMY RPG — APPLICATION SCRIPT
+   Organizado em módulos via namespaces (IIFE-like objects).
+===================================================================== */
+
+/* ---------------------------------------------------------------------
+   MODULE: Storage — camada única de persistência (localStorage)
+   Todas as chaves usam o prefixo "pyrpg_" e um número de versão,
+   para permitir migrações futuras sem quebrar progresso salvo.
+--------------------------------------------------------------------- */
+const Storage = {
+  KEY: 'pyrpg_state_v1',
+  load(){
+    try{
+      const raw = localStorage.getItem(this.KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ console.warn('Falha ao carregar progresso salvo', e); return null; }
+  },
+  save(state){
+    try{ localStorage.setItem(this.KEY, JSON.stringify(state)); }
+    catch(e){ console.warn('Falha ao salvar progresso', e); }
+  }
+};
+
+/* ---------------------------------------------------------------------
+   MODULE: State — fonte única de verdade do jogador e progresso
+--------------------------------------------------------------------- */
+function defaultState(){
+  return {
+    player:{
+      name:'Herói(ína) do Código',
+      class:'Mago do Backend',
+      title:'Aprendiz',
+      avatarIcon:'🧙',
+      avatarColor:'#00e5ff',
+      level:1, xp:0, xpToNext:100,
+      coins:150, skillPoints:0,
+      streak:0, lastStudyDate:null,
+      totalStudyMinutes:0,
+      weeklyGoalMinutes:150
+    },
+    progress:{},        // { chapterId: { done:bool, quizPassed:bool, checklist:{idx:bool} } }
+    favorites:[],        // [chapterId]
+    notes:{},            // { chapterId: "texto" }
+    achievements:[],      // [badgeId]
+    inventory:{ owned:[], equippedTheme:'default', equippedBg:'default' },
+    challenges:{ done:[] },   // [challengeId]
+    activityLog:{},       // { 'YYYY-MM-DD': minutes }
+    settings:{ theme:'dark', sound:true },
+    createdAt:new Date().toISOString()
+  };
+}
+
+const State = {
+  data:null,
+  init(){
+    const saved = Storage.load();
+    this.data = saved || defaultState();
+    // merge de segurança: garante que campos novos existam em saves antigos
+    const def = defaultState();
+    for(const k in def){ if(!(k in this.data)) this.data[k] = def[k]; }
+    for(const k in def.player){ if(!(k in this.data.player)) this.data.player[k] = def.player[k]; }
+  },
+  save(){ Storage.save(this.data); },
+  get player(){ return this.data.player; },
+  progressFor(chapterId){
+    if(!this.data.progress[chapterId]) this.data.progress[chapterId] = { done:false, quizPassed:false, checklist:{} };
+    return this.data.progress[chapterId];
+  }
+};
+
+/* ---------------------------------------------------------------------
+   MODULE: Toast — notificações rápidas não-bloqueantes
+--------------------------------------------------------------------- */
+const Toast = {
+  show(msg, icon){
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.innerHTML = `<span style="font-size:18px;">${icon||'✨'}</span><span>${msg}</span>`;
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateX(40px)'; el.style.transition='all .4s'; setTimeout(()=>el.remove(),400); }, 3400);
+  }
+};
+
+/* ---------------------------------------------------------------------
+   MODULE: Progression — XP, níveis, streak, moedas
+--------------------------------------------------------------------- */
+const Progression = {
+  xpForLevel(level){ return 100 + (level-1)*60; },
+  addXP(amount, reason){
+    const p = State.player;
+    p.xp += amount;
+    let leveled = false;
+    while(p.xp >= p.xpToNext){
+      p.xp -= p.xpToNext;
+      p.level++;
+      p.xpToNext = this.xpForLevel(p.level);
+      p.skillPoints++;
+      p.coins += 40;
+      leveled = true;
+    }
+    Toast.show(`+${amount} XP ${reason? '— '+reason:''}`, '⚡');
+    State.save();
+    UI.refreshTopbar();
+    if(leveled) this.levelUp();
+  },
+  levelUp(){
+    document.getElementById('levelup-text').textContent = `Você alcançou o nível ${State.player.level}! +1 ponto de habilidade, +40 moedas.`;
+    document.getElementById('levelup-overlay').classList.add('show');
+    Confetti.burst();
+    Achievements.check();
+  },
+  addCoins(amount, reason){
+    State.player.coins += amount;
+    Toast.show(`+${amount} moedas ${reason? '— '+reason:''}`, '🪙');
+    State.save();
+    UI.refreshTopbar();
+  },
+  registerActivity(minutes){
+    const today = new Date().toISOString().slice(0,10);
+    const p = State.player;
+    const log = State.data.activityLog;
+    log[today] = (log[today]||0) + (minutes||1);
+    p.totalStudyMinutes += (minutes||1);
+
+    if(p.lastStudyDate !== today){
+      const y = new Date(); y.setDate(y.getDate()-1);
+      const yStr = y.toISOString().slice(0,10);
+      if(p.lastStudyDate === yStr) p.streak++;
+      else if(p.lastStudyDate === null) p.streak = 1;
+      else if(p.lastStudyDate !== today) p.streak = 1;
+      p.lastStudyDate = today;
+    }
+    State.save();
+    UI.refreshTopbar();
+    Achievements.check();
+  }
+};
+
+/* ---------------------------------------------------------------------
+   MODULE: Particles — background animado em canvas (pontos conectados)
+--------------------------------------------------------------------- */
+const Particles = {
+  canvas:null, ctx:null, points:[], raf:null,
+  init(){
+    this.canvas = document.getElementById('bg-canvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.resize();
+    const count = window.innerWidth < 700 ? 35 : 70;
+    for(let i=0;i<count;i++){
+      this.points.push({
+        x:Math.random()*this.canvas.width, y:Math.random()*this.canvas.height,
+        vx:(Math.random()-0.5)*0.35, vy:(Math.random()-0.5)*0.35, r:Math.random()*1.8+0.6
+      });
+    }
+    window.addEventListener('resize', ()=>this.resize());
+    this.loop();
+  },
+  resize(){
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
+  },
+  loop(){
+    const ctx = this.ctx, w = this.canvas.width, h = this.canvas.height;
+    ctx.clearRect(0,0,w,h);
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    const dotColor = isLight ? 'rgba(80,90,160,0.55)' : 'rgba(0,229,255,0.6)';
+    const lineColor = isLight ? 'rgba(80,90,160,' : 'rgba(0,229,255,';
+    for(const pt of this.points){
+      pt.x += pt.vx; pt.y += pt.vy;
+      if(pt.x<0||pt.x>w) pt.vx*=-1;
+      if(pt.y<0||pt.y>h) pt.vy*=-1;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI*2);
+      ctx.fillStyle = dotColor;
+      ctx.fill();
+    }
+    for(let i=0;i<this.points.length;i++){
+      for(let j=i+1;j<this.points.length;j++){
+        const a=this.points[i], b=this.points[j];
+        const d = Math.hypot(a.x-b.x, a.y-b.y);
+        if(d<130){
+          ctx.beginPath();
+          ctx.strokeStyle = lineColor + (1-d/130)*0.18 + ')';
+          ctx.lineWidth = 1;
+          ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+        }
+      }
+    }
+    this.raf = requestAnimationFrame(()=>this.loop());
+  }
+};
+
+/* ---------------------------------------------------------------------
+   MODULE: Confetti — explosão de partículas coloridas (level up)
+--------------------------------------------------------------------- */
+const Confetti = {
+  canvas:null, ctx:null, pieces:[], running:false,
+  init(){
+    this.canvas = document.getElementById('confetti-canvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.resize();
+    window.addEventListener('resize', ()=>this.resize());
+  },
+  resize(){ this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; },
+  burst(){
+    const colors = ['#00e5ff','#a855f7','#ff3fa4','#39ff9d','#ffb020'];
+    for(let i=0;i<120;i++){
+      this.pieces.push({
+        x:this.canvas.width/2, y:this.canvas.height/2,
+        vx:(Math.random()-0.5)*14, vy:(Math.random()-1.4)*14,
+        size:Math.random()*7+4, color:colors[Math.floor(Math.random()*colors.length)],
+        rot:Math.random()*360, vr:(Math.random()-0.5)*14, life:100
+      });
+    }
+    if(!this.running){ this.running = true; this.loop(); }
+  },
+  loop(){
+    const ctx = this.ctx;
+    ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+    let alive = false;
+    for(const p of this.pieces){
+      if(p.life<=0) continue;
+      alive = true;
+      p.vy += 0.28; p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.life--;
+      ctx.save();
+      ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(p.life/100,0);
+      ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size*0.6);
+      ctx.restore();
+    }
+    this.pieces = this.pieces.filter(p=>p.life>0);
+    if(alive){ requestAnimationFrame(()=>this.loop()); }
+    else { this.running = false; }
+  }
+};
+
+/* ---------------------------------------------------------------------
+   MODULE: CursorFX — glow que segue o mouse + tilt 3D em cards
+--------------------------------------------------------------------- */
+const CursorFX = {
+  init(){
+    const glow = document.getElementById('cursor-glow');
+    document.addEventListener('mousemove', e=>{
+      glow.style.left = e.clientX + 'px';
+      glow.style.top = e.clientY + 'px';
+      glow.style.opacity = '1';
+    });
+    document.addEventListener('mouseleave', ()=> glow.style.opacity='0');
+
+    document.addEventListener('mousemove', e=>{
+      const el = e.target.closest && e.target.closest('.card.tilt');
+      if(!el) return;
+      const r = el.getBoundingClientRect();
+      const px = (e.clientX - r.left)/r.width - 0.5;
+      const py = (e.clientY - r.top)/r.height - 0.5;
+      el.style.transform = `perspective(700px) rotateY(${px*8}deg) rotateX(${-py*8}deg) translateY(-2px)`;
+    });
+    document.addEventListener('mouseout', e=>{
+      const el = e.target.closest && e.target.closest('.card.tilt');
+      if(el) el.style.transform = '';
+    });
+
+    document.addEventListener('mousemove', e=>{
+      const btn = e.target.closest && e.target.closest('.btn');
+      if(!btn) return;
+      const r = btn.getBoundingClientRect();
+      btn.style.setProperty('--mx', ((e.clientX-r.left)/r.width*100)+'%');
+      btn.style.setProperty('--my', ((e.clientY-r.top)/r.height*100)+'%');
+    });
+  }
+};
+
+/* ---------------------------------------------------------------------
+   MODULE: Modal — janela genérica reutilizável
+--------------------------------------------------------------------- */
+const Modal = {
+  open(html){
+    document.getElementById('modal-box').innerHTML = html;
+    document.getElementById('modal-backdrop').classList.add('show');
+  },
+  close(){ document.getElementById('modal-backdrop').classList.remove('show'); }
+};
+
+/* ---------------------------------------------------------------------
+   MODULE: UI — navegação (router), topbar, sidebar, tema
+--------------------------------------------------------------------- */
+const UI = {
+  currentPage:'dashboard',
+  currentChapterId:null,
+
+  init(){
+    // Router via cliques na sidebar
+    document.querySelectorAll('.nav-item[data-page]').forEach(item=>{
+      item.addEventListener('click', ()=> this.goTo(item.dataset.page));
+    });
+
+    document.getElementById('sidebar-toggle-btn').addEventListener('click', ()=>{
+      document.getElementById('sidebar').classList.toggle('collapsed');
+    });
+    document.getElementById('hamburger-btn').addEventListener('click', ()=>{
+      document.getElementById('sidebar').classList.toggle('mobile-open');
+    });
+    document.getElementById('content').addEventListener('click', ()=>{
+      document.getElementById('sidebar').classList.remove('mobile-open');
+    });
+
+    document.getElementById('theme-toggle-btn').addEventListener('click', ()=> this.toggleTheme());
+    document.getElementById('levelup-close-btn').addEventListener('click', ()=>{
+      document.getElementById('levelup-overlay').classList.remove('show');
+    });
+    document.getElementById('modal-backdrop').addEventListener('click', e=>{
+      if(e.target.id==='modal-backdrop') Modal.close();
+    });
+
+    // aplica tema salvo
+    document.documentElement.setAttribute('data-theme', State.data.settings.theme);
+    document.getElementById('theme-toggle-btn').textContent = State.data.settings.theme==='dark' ? '🌙' : '☀️';
+
+    this.applyEquippedTheme();
+    this.refreshTopbar();
+    this.goTo('dashboard');
+  },
+
+  toggleTheme(){
+    const cur = State.data.settings.theme;
+    const next = cur === 'dark' ? 'light' : 'dark';
+    State.data.settings.theme = next;
+    document.documentElement.setAttribute('data-theme', next);
+    document.getElementById('theme-toggle-btn').textContent = next==='dark' ? '🌙' : '☀️';
+    State.save();
+  },
+
+  applyEquippedTheme(){
+    const theme = State.data.inventory.equippedTheme;
+    const map = {
+      default:['#00e5ff','#a855f7'],
+      aurora:['#39ff9d','#00e5ff'],
+      sakura:['#ff8fd8','#ff3fa4'],
+      matrix:['#39ff9d','#0be36a']
+    };
+    const colors = map[theme] || map.default;
+    document.documentElement.style.setProperty('--neon-cyan', colors[0]);
+    document.documentElement.style.setProperty('--neon-purple', colors[1]);
+    document.documentElement.style.setProperty('--grad-primary', `linear-gradient(135deg, ${colors[0]}, ${colors[1]})`);
+  },
+
+  goTo(page, chapterId){
+    this.currentPage = page;
+    if(chapterId) this.currentChapterId = chapterId;
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+page).classList.add('active');
+    document.querySelectorAll('.nav-item[data-page]').forEach(n=>{
+      n.classList.toggle('active', n.dataset.page===page);
+    });
+    window.scrollTo({top:0,behavior:'smooth'});
+
+    // Render sob-demanda de cada página
+    const renderers = {
+      dashboard:()=>Views.renderDashboard(),
+      map:()=>Views.renderMap(),
+      lesson:()=>Views.renderLesson(this.currentChapterId),
+      editor:()=>Views.renderEditor(),
+      challenges:()=>Views.renderChallenges(),
+      projects:()=>Views.renderProjects(),
+      library:()=>Views.renderLibrary(),
+      courses:()=>Views.renderCourses(),
+      avatar:()=>Views.renderAvatar(),
+      shop:()=>Views.renderShop(),
+      achievements:()=>Views.renderAchievements(),
+      ranking:()=>Views.renderRanking(),
+      stats:()=>Views.renderStats(),
+      settings:()=>Views.renderSettings()
+    };
+    if(renderers[page]) renderers[page]();
+  },
+
+  openLesson(chapterId){
+    this.currentChapterId = chapterId;
+    this.goTo('lesson');
+  },
+
+  refreshTopbar(){
+    const p = State.player;
+    document.getElementById('topbar-level').textContent = 'Nv. ' + p.level;
+    document.getElementById('topbar-coins').textContent = p.coins;
+    document.getElementById('topbar-streak').textContent = p.streak;
+    document.getElementById('topbar-avatar').textContent = p.avatarIcon;
+    document.getElementById('topbar-avatar').style.background = `linear-gradient(135deg, ${p.avatarColor}, var(--neon-purple))`;
+  }
+};
+
+/* =====================================================================
+   MODULE: Data — todo o conteúdo estático da plataforma
+===================================================================== */
+const Data = {};
+
+/* ---- 22 capítulos da trilha principal (o "mapa de aprendizado") ---- */
+Data.chapters = [
+  { id:1, title:'O que é Python', icon:'🐍', xp:60, deep:true,
+    subtopics:['O que é Python','História da linguagem','Instalação','VS Code','PyCharm','Google Colab'] },
+  { id:2, title:'Variáveis e Tipos', icon:'📦', xp:70, deep:true,
+    subtopics:['Variáveis','Tipos de dados','print()','input()','Comentários'] },
+  { id:3, title:'Operadores', icon:'➗', xp:70, deep:true,
+    subtopics:['Aritméticos','Comparação','Lógicos','Atribuição'] },
+  { id:4, title:'Condições', icon:'🔀', xp:80, deep:true,
+    subtopics:['if / elif / else','Operadores lógicos em condições','Condições aninhadas'] },
+  { id:5, title:'Loops', icon:'🔁', xp:90, deep:true,
+    subtopics:['for','while','break e continue','range()'] },
+  { id:6, title:'Funções', icon:'🧩', xp:100, deep:true,
+    subtopics:['def e parâmetros','return','Argumentos padrão','*args e **kwargs','Escopo'] },
+  { id:7, title:'Listas, Tuplas, Dicionários e Sets', icon:'🗃️', xp:110,
+    subtopics:['Listas','Tuplas','Dicionários','Sets','Métodos e slicing'] },
+  { id:8, title:'Programação Orientada a Objetos', icon:'🏛️', xp:130,
+    subtopics:['Classes e objetos','Atributos e métodos','Herança','Polimorfismo','Encapsulamento'] },
+  { id:9, title:'Arquivos', icon:'📄', xp:90,
+    subtopics:['Leitura de arquivos','Escrita de arquivos','with open()','CSV e JSON'] },
+  { id:10, title:'Módulos e Pacotes', icon:'📦', xp:80,
+    subtopics:['import','Módulos padrão','pip','Ambientes virtuais'] },
+  { id:11, title:'Pandas', icon:'🐼', xp:140,
+    subtopics:['DataFrames','Series','Leitura de CSV/Excel','Filtragem e agregação'] },
+  { id:12, title:'NumPy', icon:'🔢', xp:120,
+    subtopics:['Arrays','Operações vetorizadas','Broadcasting','Álgebra linear básica'] },
+  { id:13, title:'Matplotlib', icon:'📊', xp:110,
+    subtopics:['Gráficos de linha e barra','Subplots','Customização','Exportação de imagens'] },
+  { id:14, title:'Consumindo APIs', icon:'🌐', xp:130,
+    subtopics:['requests','JSON','Autenticação','Rate limiting'] },
+  { id:15, title:'SQL com Python', icon:'🗄️', xp:130,
+    subtopics:['sqlite3','CRUD com SQL','ORMs','Boas práticas de banco de dados'] },
+  { id:16, title:'Automação', icon:'🤖', xp:120,
+    subtopics:['Automação de tarefas','Manipulação de planilhas','Agendamento de scripts'] },
+  { id:17, title:'Web Scraping', icon:'🕸️', xp:130,
+    subtopics:['BeautifulSoup','Selenium','Boas práticas e ética de scraping'] },
+  { id:18, title:'Flask', icon:'🧪', xp:150,
+    subtopics:['Rotas','Templates Jinja2','Formulários','APIs REST simples'] },
+  { id:19, title:'Django', icon:'🏗️', xp:160,
+    subtopics:['MVT','Models e ORM','Admin','Autenticação'] },
+  { id:20, title:'Machine Learning', icon:'🧠', xp:180,
+    subtopics:['scikit-learn','Treino e teste','Regressão','Classificação'] },
+  { id:21, title:'Inteligência Artificial', icon:'🤯', xp:190,
+    subtopics:['Redes neurais (conceitos)','APIs de IA','Boas práticas éticas'] },
+  { id:22, title:'Projetos Reais', icon:'🏆', xp:220,
+    subtopics:['Planejamento de projeto','Portfólio','Deploy','Próximos passos'] }
+];
+
+/* Utilitário: gera um bloco de código destacado (mini-highlighter) */
+Data.hl = function(code){
+  return code
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/(#.*)/g,'<span class="com">$1</span>')
+    .replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g,'<span class="str">$1</span>')
+    .replace(/\b(def|return|if|elif|else|for|while|in|import|from|class|True|False|None|and|or|not|break|continue|as|with|try|except|pass|lambda)\b/g,'<span class="kw">$1</span>')
+    .replace(/\b(\d+\.?\d*)\b/g,'<span class="num">$1</span>')
+    .replace(/\b([a-zA-Z_][a-zA-Z0-9_]*)(?=\()/g,'<span class="fn">$1</span>');
+};
+
+/* ---- Conteúdo profundo dos 6 primeiros capítulos ---- */
+Data.deepContent = {
+  1:{
+    simples:`<p>Python é uma <b>linguagem de programação</b> — um jeito de dar instruções para o computador usando texto que parece bastante com inglês simples. Ela foi criada para ser <b>fácil de ler e escrever</b>, por isso é a linguagem mais recomendada para quem está começando.</p>
+      <p>Foi criada por <b>Guido van Rossum</b> e lançada em <b>1991</b>. O nome "Python" não veio da cobra, e sim do grupo de comédia britânico <i>Monty Python</i>, que Guido adorava.</p>
+      <h4>Como instalar</h4>
+      <ul><li>Baixe em <code class="inline">python.org/downloads</code></li><li>Marque a opção "Add Python to PATH" durante a instalação</li><li>Verifique com <code class="inline">python --version</code> no terminal</li></ul>
+      <h4>Onde escrever seu código</h4>
+      <ul><li><b>VS Code</b>: editor leve e gratuito, com extensão oficial de Python</li><li><b>PyCharm</b>: IDE completa, ótima para projetos maiores</li><li><b>Google Colab</b>: roda no navegador, sem instalar nada — ótimo para começar agora mesmo</li></ul>`,
+    intermediario:`<p>Python é uma linguagem <b>interpretada</b>, <b>multiparadigma</b> (suporta programação procedural, orientada a objetos e funcional) e de <b>tipagem dinâmica e forte</b>. Isso significa que o interpretador executa o código linha a linha (sem precisar compilar antes) e que o tipo de uma variável é inferido em tempo de execução.</p>
+      <p>O design da linguagem segue a filosofia descrita no <i>Zen of Python</i> (<code class="inline">import this</code>), que prioriza legibilidade e simplicidade — "explícito é melhor que implícito".</p>
+      <h4>CPython e o interpretador</h4>
+      <p>A implementação de referência é o <b>CPython</b>, escrito em C. Ele compila o código-fonte para <i>bytecode</i> (arquivos <code class="inline">.pyc</code>) que roda na Python Virtual Machine (PVM).</p>
+      <h4>Ambientes de desenvolvimento</h4>
+      <p>Em projetos reais, normalmente se usa <b>ambientes virtuais</b> (<code class="inline">venv</code>) para isolar dependências por projeto, e um editor com suporte a linting/formatação (VS Code + extensões Pylance/Black, ou PyCharm nativamente).</p>`,
+    avancado:`<p>Python segue a especificação da <b>PEP</b> (Python Enhancement Proposal) — por exemplo, a <b>PEP 8</b> define o guia de estilo oficial. O interpretador CPython usa um <b>Global Interpreter Lock (GIL)</b>, que impede múltiplas threads nativas de executarem bytecode Python simultaneamente no mesmo processo — algo importante para quem for trabalhar com paralelismo (nesses casos usa-se <code class="inline">multiprocessing</code> em vez de <code class="inline">threading</code> para CPU-bound).</p>
+      <p>Existem outras implementações além do CPython: <b>PyPy</b> (com JIT, mais rápido para código puro-Python), <b>Jython</b> (roda na JVM) e <b>IronPython</b> (roda no .NET). Entender essas diferenças é útil ao escolher o runtime certo para produção.</p>`,
+    exemplos:[
+      { title:'Seu primeiro programa', code:'print("Olá, mundo!")', output:'Olá, mundo!' },
+      { title:'Descobrindo a versão do Python', code:'import sys\nprint(sys.version)', output:'3.12.1 (main, ...)' }
+    ],
+    diagramSvg:`<svg width="360" height="140" viewBox="0 0 360 140">
+      <rect x="10" y="45" width="90" height="50" rx="10" fill="#0f1224" stroke="#00e5ff" stroke-width="2"/>
+      <text x="55" y="75" fill="#eef0fb" font-size="12" text-anchor="middle">Código .py</text>
+      <path d="M100 70 L160 70" stroke="#a855f7" stroke-width="2" marker-end="url(#arrow1)"/>
+      <rect x="160" y="45" width="90" height="50" rx="10" fill="#0f1224" stroke="#a855f7" stroke-width="2"/>
+      <text x="205" y="70" fill="#eef0fb" font-size="12" text-anchor="middle">Interpretador</text>
+      <text x="205" y="85" fill="#a2a8c3" font-size="10" text-anchor="middle">CPython</text>
+      <path d="M250 70 L310 70" stroke="#39ff9d" stroke-width="2" marker-end="url(#arrow1)"/>
+      <rect x="310" y="45" width="45" height="50" rx="10" fill="#0f1224" stroke="#39ff9d" stroke-width="2"/>
+      <text x="332" y="75" fill="#eef0fb" font-size="20" text-anchor="middle">▶</text>
+      <defs><marker id="arrow1" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#a855f7"/></marker></defs>
+    </svg>`,
+    resumo:'Python é uma linguagem interpretada, criada por Guido van Rossum em 1991, famosa pela sintaxe simples e legível. Pode ser escrita em editores como VS Code, PyCharm ou direto no navegador com Google Colab.',
+    curiosidades:['O nome vem do grupo Monty Python, não da cobra.','Python é usada pela NASA, Google, Netflix e Instagram.','"import this" mostra os 19 princípios (Zen) da linguagem.'],
+    errosComuns:['Esquecer de adicionar Python ao PATH na instalação do Windows.','Confundir print (mostrar na tela) com return (devolver um valor).','Misturar versões: código Python 2 não roda igual em Python 3.'],
+    boasPraticas:['Sempre use a versão mais recente do Python 3.','Siga a PEP 8 para nomes e indentação.','Use ambientes virtuais por projeto.'],
+    desafio:{ enunciado:'Escreva um programa que imprima seu nome e a mensagem "está pronto(a) para virar um Mago do Código!"', starter:'# Escreva seu código aqui\nnome = ""\nprint()', expectedContains:['print'] },
+    quiz:[
+      { q:'Quem criou a linguagem Python?', options:['Guido van Rossum','Linus Torvalds','Dennis Ritchie','James Gosling'], correct:0, explain:'Guido van Rossum criou o Python e o lançou em 1991.' },
+      { q:'De onde vem o nome "Python"?', options:['Da cobra píton','Do grupo Monty Python','De um projeto da NASA','É um acrônimo'], correct:1, explain:'O nome homenageia o grupo de comédia britânico Monty Python.' },
+      { q:'Qual comando mostra a versão do Python instalada no terminal?', options:['python --version','python -v-check','py --info','python show'], correct:0, explain:'"python --version" (ou "python -V") exibe a versão instalada.' }
+    ]
+  },
+  2:{
+    simples:`<p>Uma <b>variável</b> é como uma caixinha com um nome, onde você guarda um valor para usar depois.</p>
+      <div class="code-block">${Data.hl('nome = "Ana"\nidade = 25\nprint(nome, idade)')}</div>
+      <p>O Python descobre sozinho o <b>tipo</b> do valor guardado:</p>
+      <ul><li><code class="inline">str</code> — texto, entre aspas: <code class="inline">"Ana"</code></li>
+      <li><code class="inline">int</code> — número inteiro: <code class="inline">10</code></li>
+      <li><code class="inline">float</code> — número com casas decimais: <code class="inline">3.14</code></li>
+      <li><code class="inline">bool</code> — verdadeiro ou falso: <code class="inline">True</code> / <code class="inline">False</code></li></ul>
+      <p><code class="inline">print()</code> mostra algo na tela. <code class="inline">input()</code> pede algo digitado pelo usuário. Comentários (<code class="inline">#</code>) são anotações que o Python ignora ao executar.</p>`,
+    intermediario:`<p>Em Python, variáveis não têm um tipo fixo declarado — o tipo é uma propriedade do <b>objeto</b> referenciado, não da variável em si (tipagem dinâmica). Isso significa que uma mesma variável pode apontar para um <code class="inline">int</code> e depois para uma <code class="inline">str</code> ao longo da execução.</p>
+      <p><code class="inline">input()</code> sempre retorna uma <code class="inline">str</code>, mesmo que o usuário digite números — por isso é comum converter com <code class="inline">int()</code> ou <code class="inline">float()</code>.</p>
+      <p>Nomes de variáveis seguem <i>snake_case</i> por convenção (PEP 8): <code class="inline">idade_usuario</code>, não <code class="inline">idadeUsuario</code>.</p>`,
+    avancado:`<p>Toda variável em Python é uma referência a um objeto na memória; o operador de atribuição não copia valores, apenas vincula um nome a um objeto (você pode inspecionar isso com <code class="inline">id()</code>). Tipos imutáveis como <code class="inline">int</code>, <code class="inline">str</code> e <code class="inline">tuple</code> não podem ser alterados in-place — qualquer "modificação" cria um novo objeto. CPython também usa <b>interning</b> para inteiros pequenos (-5 a 256) e algumas strings, reaproveitando o mesmo objeto na memória por otimização.</p>`,
+    exemplos:[
+      { title:'Declarando variáveis', code:'nome = "Ana"\nidade = 28\naltura = 1.70\nativo = True\nprint(nome, idade, altura, ativo)', output:'Ana 28 1.7 True' },
+      { title:'input() sempre retorna texto', code:'idade = input("Digite sua idade: ")\nprint(type(idade))', output:"Digite sua idade: 20\n<class 'str'>" }
+    ],
+    diagramSvg:`<svg width="320" height="120" viewBox="0 0 320 120">
+      <rect x="20" y="35" width="110" height="50" rx="10" fill="#0f1224" stroke="#00e5ff" stroke-width="2"/>
+      <text x="75" y="65" fill="#eef0fb" font-size="13" text-anchor="middle">nome</text>
+      <path d="M130 60 L190 60" stroke="#a855f7" stroke-width="2" marker-end="url(#arrow2)"/>
+      <rect x="190" y="35" width="110" height="50" rx="10" fill="#0f1224" stroke="#39ff9d" stroke-width="2"/>
+      <text x="245" y="65" fill="#eef0fb" font-size="13" text-anchor="middle">"Ana" (str)</text>
+      <defs><marker id="arrow2" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#a855f7"/></marker></defs>
+    </svg>`,
+    resumo:'Variáveis guardam valores com um nome. Python define o tipo automaticamente (str, int, float, bool). print() exibe, input() lê texto do usuário, e # cria comentários.',
+    curiosidades:['Python permite trocar valores de duas variáveis com "a, b = b, a", sem variável auxiliar.','Nomes de variáveis não podem começar com número.'],
+    errosComuns:['Tentar somar número com texto sem converter: "idade" + 5 gera erro.','Esquecer que input() retorna sempre string.','Usar nomes reservados como "print" ou "list" como nome de variável.'],
+    boasPraticas:['Use nomes descritivos: "idade_usuario" em vez de "x".','Sempre converta input() para int/float quando for número.','Comente apenas o que não é óbvio pelo código.'],
+    desafio:{ enunciado:'Peça o nome e a idade do usuário com input(), converta a idade para int, e imprima uma frase de boas-vindas com os dois valores.', starter:'nome = input("Seu nome: ")\nidade = input("Sua idade: ")\n# converta e imprima aqui', expectedContains:['print'] },
+    quiz:[
+      { q:'O que input() sempre retorna?', options:['int','str','float','bool'], correct:1, explain:'input() sempre devolve uma string, mesmo se o usuário digitar números.' },
+      { q:'Qual símbolo inicia um comentário em Python?', options:['//','#','--','/*'], correct:1, explain:'O símbolo "#" inicia um comentário de uma linha em Python.' },
+      { q:'Qual dessas é uma convenção de nomes recomendada pela PEP 8?', options:['camelCase','snake_case','PascalCase','kebab-case'], correct:1, explain:'A PEP 8 recomenda snake_case para variáveis e funções.' }
+    ]
+  },
+  3:{
+    simples:`<p><b>Operadores</b> são símbolos que fazem operações com valores.</p>
+      <ul><li><b>Aritméticos:</b> <code class="inline">+ - * / // % **</code></li>
+      <li><b>Comparação:</b> <code class="inline">== != > < >= <=</code> (resultam em True/False)</li>
+      <li><b>Lógicos:</b> <code class="inline">and</code>, <code class="inline">or</code>, <code class="inline">not</code></li>
+      <li><b>Atribuição:</b> <code class="inline">= += -= *= /=</code></li></ul>`,
+    intermediario:`<p><code class="inline">/</code> sempre retorna <code class="inline">float</code>; <code class="inline">//</code> é a divisão inteira (arredonda para baixo); <code class="inline">%</code> retorna o resto da divisão; <code class="inline">**</code> é potenciação. Operadores lógicos em Python fazem <i>short-circuit</i>: em <code class="inline">a and b</code>, se "a" for falso, "b" nem é avaliado.</p>`,
+    avancado:`<p>Operadores de comparação podem ser encadeados: <code class="inline">0 < x < 10</code> equivale a <code class="inline">0 < x and x < 10</code>. Além disso, operadores como <code class="inline">+</code> são implementados via <i>dunder methods</i> (<code class="inline">__add__</code>), o que permite sobrecarregá-los em classes próprias.</p>`,
+    exemplos:[
+      { title:'Operadores aritméticos', code:'print(7 // 2)\nprint(7 % 2)\nprint(2 ** 5)', output:'3\n1\n32' },
+      { title:'Comparação e lógicos', code:'idade = 20\nprint(idade >= 18 and idade < 65)', output:'True' }
+    ],
+    diagramSvg:`<svg width="300" height="110" viewBox="0 0 300 110"><text x="20" y="30" fill="#00e5ff" font-size="16" font-family="Consolas">7 // 2 = 3</text><text x="20" y="60" fill="#a855f7" font-size="16" font-family="Consolas">7 % 2 = 1</text><text x="20" y="90" fill="#39ff9d" font-size="16" font-family="Consolas">2 ** 5 = 32</text></svg>`,
+    resumo:'Operadores realizam cálculos (aritméticos), comparações (retornam booleano) e combinações lógicas (and/or/not). // é divisão inteira, % é resto, ** é potência.',
+    curiosidades:['"%" também é chamado de operador módulo e é muito usado para saber se um número é par: n % 2 == 0.'],
+    errosComuns:['Confundir "=" (atribuição) com "==" (comparação).','Esperar que "/" retorne inteiro.'],
+    boasPraticas:['Use parênteses para deixar expressões complexas mais claras, mesmo quando não obrigatório.'],
+    desafio:{ enunciado:'Escreva um programa que receba um número e imprima se ele é par ou ímpar usando o operador %.', starter:'numero = int(input("Digite um número: "))\n', expectedContains:['%'] },
+    quiz:[
+      { q:'Qual operador retorna o resto de uma divisão?', options:['//','%','**','/'], correct:1, explain:'"%" é o operador módulo, retorna o resto da divisão.' },
+      { q:'O que "5 // 2" retorna?', options:['2.5','2','3','2.0'], correct:1, explain:'"//" é divisão inteira (arredondada para baixo): 5//2 = 2.' }
+    ]
+  },
+  4:{
+    simples:`<p><b>Condições</b> permitem que o programa tome decisões: "se isso acontecer, faça aquilo".</p>
+      <div class="code-block">${Data.hl('idade = 20\nif idade >= 18:\n    print("Maior de idade")\nelse:\n    print("Menor de idade")')}</div>
+      <p>Estrutura básica: <code class="inline">if condição:</code>, opcionalmente <code class="inline">elif outra_condição:</code> e <code class="inline">else:</code> para quando nada for verdadeiro.</p>`,
+    intermediario:`<p>Python usa <b>indentação</b> (geralmente 4 espaços) para delimitar blocos, em vez de chaves <code class="inline">{}</code>. Qualquer valor "vazio" ou zero é considerado <i>falsy</i> em uma condição: <code class="inline">0</code>, <code class="inline">""</code>, <code class="inline">[]</code>, <code class="inline">None</code>.</p>`,
+    avancado:`<p>Desde o Python 3.10 existe também o <code class="inline">match/case</code> (pattern matching estrutural), uma alternativa a longas cadeias de <code class="inline">if/elif</code> quando se compara um mesmo valor a vários padrões.</p>`,
+    exemplos:[
+      { title:'if / elif / else', code:'nota = 7\nif nota >= 7:\n    print("Aprovado")\nelif nota >= 5:\n    print("Recuperação")\nelse:\n    print("Reprovado")', output:'Aprovado' }
+    ],
+    diagramSvg:`<svg width="320" height="160" viewBox="0 0 320 160">
+      <polygon points="120,10 200,45 120,80 40,45" fill="#0f1224" stroke="#00e5ff" stroke-width="2"/>
+      <text x="120" y="50" fill="#eef0fb" font-size="11" text-anchor="middle">nota >= 7?</text>
+      <path d="M120 80 L120 120" stroke="#39ff9d" stroke-width="2" marker-end="url(#arrow4)"/>
+      <text x="130" y="105" fill="#39ff9d" font-size="10">sim</text>
+      <rect x="60" y="120" width="120" height="34" rx="8" fill="#0f1224" stroke="#39ff9d" stroke-width="2"/>
+      <text x="120" y="141" fill="#eef0fb" font-size="11" text-anchor="middle">Aprovado</text>
+      <path d="M200 45 L270 45" stroke="#ff4d6d" stroke-width="2" marker-end="url(#arrow4)"/>
+      <text x="230" y="38" fill="#ff4d6d" font-size="10">não</text>
+      <defs><marker id="arrow4" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#39ff9d"/></marker></defs>
+    </svg>`,
+    resumo:'if/elif/else controlam o fluxo do programa com base em condições booleanas. Blocos são definidos por indentação.',
+    curiosidades:['Python não tem "switch" tradicional — desde 3.10 existe match/case.'],
+    errosComuns:['Esquecer os dois pontos ":" no final da linha do if.','Misturar espaços e tabs na indentação.'],
+    boasPraticas:['Prefira "elif" a vários "if" separados quando as condições são mutuamente exclusivas.'],
+    desafio:{ enunciado:'Peça um número e diga se ele é positivo, negativo ou zero.', starter:'numero = int(input("Número: "))\n', expectedContains:['if'] },
+    quiz:[
+      { q:'O que delimita um bloco de código em Python?', options:['Chaves {}','Indentação','Ponto e vírgula','Parênteses'], correct:1, explain:'Python usa indentação consistente para delimitar blocos.' },
+      { q:'Qual palavra-chave testa uma condição alternativa?', options:['elseif','elif','else if','otherwise'], correct:1, explain:'"elif" é a forma correta em Python.' }
+    ]
+  },
+  5:{
+    simples:`<p><b>Loops</b> (laços) repetem um bloco de código várias vezes.</p>
+      <ul><li><code class="inline">for</code>: repete para cada item de uma sequência.</li>
+      <li><code class="inline">while</code>: repete enquanto uma condição for verdadeira.</li>
+      <li><code class="inline">break</code> interrompe o loop; <code class="inline">continue</code> pula para a próxima repetição.</li></ul>`,
+    intermediario:`<p><code class="inline">range(inicio, fim, passo)</code> gera uma sequência de números sem criar uma lista inteira na memória (é um objeto <i>lazy</i>/iterável). <code class="inline">for</code> em Python itera diretamente sobre qualquer <i>iterável</i> (listas, strings, dicionários, etc.), diferente de outras linguagens que usam contadores manuais.</p>`,
+    avancado:`<p>Por baixo dos panos, <code class="inline">for</code> chama <code class="inline">iter()</code> no objeto e depois <code class="inline">next()</code> repetidamente até um <code class="inline">StopIteration</code> — o chamado <b>protocolo de iteração</b>. Você pode criar seus próprios iteráveis implementando <code class="inline">__iter__</code> e <code class="inline">__next__</code>, ou de forma mais simples, usando <code class="inline">yield</code> em um generator.</p>`,
+    exemplos:[
+      { title:'for com range', code:'for i in range(5):\n    print(i)', output:'0\n1\n2\n3\n4' },
+      { title:'while com break', code:'n = 0\nwhile True:\n    print(n)\n    n += 1\n    if n == 3:\n        break', output:'0\n1\n2' }
+    ],
+    diagramSvg:`<svg width="220" height="160" viewBox="0 0 220 160">
+      <circle cx="110" cy="80" r="55" fill="none" stroke="#a855f7" stroke-width="3" stroke-dasharray="6 5"/>
+      <text x="110" y="70" fill="#eef0fb" font-size="12" text-anchor="middle">repete</text>
+      <text x="110" y="90" fill="#eef0fb" font-size="12" text-anchor="middle">bloco</text>
+      <path d="M155 45 L170 30" stroke="#a855f7" stroke-width="2" marker-end="url(#arrow5)"/>
+      <defs><marker id="arrow5" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#a855f7"/></marker></defs>
+    </svg>`,
+    resumo:'for percorre sequências; while repete enquanto a condição for verdadeira. break sai do loop, continue pula para a próxima iteração.',
+    curiosidades:['range(5) não cria uma lista de 5 números na memória — é gerado sob demanda.'],
+    errosComuns:['Esquecer de atualizar a variável de controle em um while, criando loop infinito.','Confundir range(5) (0 a 4) com números de 1 a 5.'],
+    boasPraticas:['Prefira "for" quando souber quantas vezes repetir; "while" quando depender de uma condição.'],
+    desafio:{ enunciado:'Use um for com range() para imprimir a tabuada do 5 (de 1 a 10).', starter:'for i in range(1, 11):\n    ', expectedContains:['for','range'] },
+    quiz:[
+      { q:'O que range(5) gera?', options:['1 a 5','0 a 4','0 a 5','1 a 4'], correct:1, explain:'range(5) gera 0,1,2,3,4 — começa em 0 e não inclui o 5.' },
+      { q:'Qual comando interrompe totalmente um loop?', options:['continue','pass','break','stop'], correct:2, explain:'"break" sai do loop imediatamente.' }
+    ]
+  },
+  6:{
+    simples:`<p><b>Funções</b> são blocos de código reutilizáveis com um nome, que podem receber entradas (parâmetros) e devolver uma saída (<code class="inline">return</code>).</p>`,
+    intermediario:`<p>Parâmetros podem ter valores padrão (<code class="inline">def saudacao(nome="visitante")</code>), e podem ser passados por posição ou por nome (<i>keyword arguments</i>). Uma função sem <code class="inline">return</code> explícito devolve <code class="inline">None</code>.</p>`,
+    avancado:`<p><code class="inline">*args</code> captura argumentos posicionais extras em uma tupla; <code class="inline">**kwargs</code> captura argumentos nomeados extras em um dicionário. Funções são <i>cidadãs de primeira classe</i> em Python: podem ser armazenadas em variáveis, passadas como argumento e retornadas por outras funções (closures, decorators).</p>`,
+    exemplos:[
+      { title:'Função simples', code:'def saudacao(nome):\n    return f"Olá, {nome}!"\n\nprint(saudacao("Maria"))', output:'Olá, Maria!' },
+      { title:'*args e **kwargs', code:'def soma(*numeros):\n    return sum(numeros)\n\nprint(soma(1, 2, 3, 4))', output:'10' }
+    ],
+    diagramSvg:`<svg width="300" height="120" viewBox="0 0 300 120">
+      <path d="M10 60 L70 60" stroke="#00e5ff" stroke-width="2" marker-end="url(#arrow6)"/>
+      <text x="10" y="45" fill="#a2a8c3" font-size="10">entrada</text>
+      <rect x="70" y="30" width="120" height="60" rx="12" fill="#0f1224" stroke="#a855f7" stroke-width="2"/>
+      <text x="130" y="65" fill="#eef0fb" font-size="12" text-anchor="middle">função()</text>
+      <path d="M190 60 L260 60" stroke="#39ff9d" stroke-width="2" marker-end="url(#arrow6)"/>
+      <text x="230" y="45" fill="#a2a8c3" font-size="10">return</text>
+      <defs><marker id="arrow6" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#39ff9d"/></marker></defs>
+    </svg>`,
+    resumo:'Funções encapsulam código reutilizável com def, recebem parâmetros e podem devolver valores com return.',
+    curiosidades:['Funções sem return devolvem None automaticamente.'],
+    errosComuns:['Esquecer o return e assumir que a função devolveu um valor.','Confundir parâmetro (na definição) com argumento (na chamada).'],
+    boasPraticas:['Dê nomes de verbo para funções: calcular_media(), nunca media_calc_1().','Funções pequenas, cada uma fazendo uma única coisa.'],
+    desafio:{ enunciado:'Crie uma função "eh_par(numero)" que retorna True se o número for par.', starter:'def eh_par(numero):\n    ', expectedContains:['def','return'] },
+    quiz:[
+      { q:'O que uma função sem "return" devolve?', options:['0','""','None','Erro'], correct:2, explain:'Por padrão, uma função sem return explícito devolve None.' },
+      { q:'O que "*args" captura?', options:['Um dicionário de nomeados','Uma tupla de posicionais extras','Apenas um argumento','Nada, é sintaxe inválida'], correct:1, explain:'"*args" agrupa argumentos posicionais extras em uma tupla.' }
+    ]
+  }
+};
+
+/* ---- Conquistas / badges ---- */
+Data.badges = [
+  { id:'primeiro_codigo', name:'Primeiro Código', desc:'Execute seu primeiro código no editor', icon:'👶', check:s=> (s.data._codeRuns||0) >= 1 },
+  { id:'cem_exercicios', name:'100 Exercícios', desc:'Complete 100 desafios/quizzes', icon:'💯', check:s=> (s.data._exercisesDone||0) >= 100 },
+  { id:'mil_xp', name:'1000 XP', desc:'Acumule 1000 XP na carreira', icon:'⚡', check:s=> ((s.player.level-1)*80 + s.player.xp) >= 1000 },
+  { id:'primeira_api', name:'Primeira API', desc:'Conclua o capítulo de Consumo de APIs', icon:'🌐', check:s=> !!(s.data.progress[14] && s.data.progress[14].done) },
+  { id:'primeiro_projeto', name:'Primeiro Projeto', desc:'Marque seu primeiro projeto como concluído', icon:'🚀', check:s=> (s.data._projectsDone||[]).length >= 1 },
+  { id:'primeiro_crud', name:'Primeiro CRUD', desc:'Conclua o capítulo de SQL com Python', icon:'🗄️', check:s=> !!(s.data.progress[15] && s.data.progress[15].done) },
+  { id:'especialista_loops', name:'Especialista em Loops', desc:'Gabarite o quiz do capítulo de Loops', icon:'🔁', check:s=> !!(s.data.progress[5] && s.data.progress[5].quizPassed) },
+  { id:'mestre_funcoes', name:'Mestre de Funções', desc:'Gabarite o quiz do capítulo de Funções', icon:'🧩', check:s=> !!(s.data.progress[6] && s.data.progress[6].quizPassed) }
+];
+
+/* ---- Loja ---- */
+Data.shopItems = [
+  { id:'theme_aurora', type:'theme', name:'Tema Aurora', desc:'Paleta verde-ciano', icon:'🌌', price:120, preview:['#39ff9d','#00e5ff'] },
+  { id:'theme_sakura', type:'theme', name:'Tema Sakura', desc:'Paleta rosa vibrante', icon:'🌸', price:120, preview:['#ff8fd8','#ff3fa4'] },
+  { id:'theme_matrix', type:'theme', name:'Tema Matrix', desc:'Paleta verde hacker', icon:'💻', price:150, preview:['#39ff9d','#0be36a'] },
+  { id:'avatar_ninja', type:'avatar', name:'Avatar Ninja', desc:'Ícone exclusivo', icon:'🥷', price:80 },
+  { id:'avatar_robot', type:'avatar', name:'Avatar Robô', desc:'Ícone exclusivo', icon:'🤖', price:80 },
+  { id:'avatar_alien', type:'avatar', name:'Avatar Alien', desc:'Ícone exclusivo', icon:'👽', price:80 },
+  { id:'avatar_dragon', type:'avatar', name:'Avatar Dragão', desc:'Ícone lendário', icon:'🐉', price:200 },
+  { id:'title_hacker', type:'title', name:'Título: Hacker Ético', desc:'Exibido no seu perfil', icon:'🏷️', price:100 },
+  { id:'title_mestre', type:'title', name:'Título: Mestre Pythônico', desc:'Exibido no seu perfil', icon:'🏷️', price:250 }
+];
+
+/* ---- Projetos reais ---- */
+Data.projects = [
+  { title:'Calculadora', icon:'🧮', level:'Iniciante', desc:'Uma calculadora de linha de comando com as 4 operações básicas.', techs:['input','funções','condições'] },
+  { title:'Agenda de Contatos', icon:'📇', level:'Iniciante', desc:'CRUD simples de contatos guardados em uma lista de dicionários.', techs:['listas','dicionários','loops'] },
+  { title:'Sistema Bancário', icon:'🏦', level:'Intermediário', desc:'Simulação de conta bancária com depósito, saque e extrato.', techs:['funções','POO','arquivos'] },
+  { title:'CRUD Completo', icon:'🗂️', level:'Intermediário', desc:'Create, Read, Update, Delete persistindo dados em SQLite.', techs:['SQL','funções','POO'] },
+  { title:'Consumo de API', icon:'🌐', level:'Intermediário', desc:'Busca dados de uma API pública e exibe formatado no terminal.', techs:['requests','JSON'] },
+  { title:'Chat em Terminal', icon:'💬', level:'Avançado', desc:'Chat simples cliente-servidor usando sockets.', techs:['sockets','threading'] },
+  { title:'Dashboard de Dados', icon:'📊', level:'Avançado', desc:'Painel com gráficos a partir de uma planilha CSV.', techs:['pandas','matplotlib'] },
+  { title:'Bot para Discord', icon:'🎮', level:'Avançado', desc:'Bot com comandos customizados usando discord.py.', techs:['APIs','async'] },
+  { title:'Bot para Telegram', icon:'✈️', level:'Avançado', desc:'Bot de respostas automáticas via API do Telegram.', techs:['requests','webhooks'] },
+  { title:'Automação de Planilhas', icon:'📈', level:'Intermediário', desc:'Script que organiza e resume dados de planilhas automaticamente.', techs:['pandas','automação'] },
+  { title:'Web Scraper', icon:'🕷️', level:'Avançado', desc:'Coleta dados públicos de páginas web de forma ética.', techs:['BeautifulSoup','requests'] },
+  { title:'Sistema Web (Flask)', icon:'🌍', level:'Avançado', desc:'Aplicação web completa com rotas, templates e banco de dados.', techs:['Flask','SQL','HTML'] },
+  { title:'Mini Projeto de IA', icon:'🧠', level:'Avançado', desc:'Classificador simples treinado com scikit-learn.', techs:['scikit-learn','pandas'] }
+];
+
+/* ---- Biblioteca de links gratuitos ---- */
+Data.library = [
+  { category:'YouTube', icon:'📺', items:[
+    { name:'Curso em Vídeo — Python', url:'https://www.cursoemvideo.com/curso/python-3-mundo-1/' },
+    { name:'freeCodeCamp (YouTube)', url:'https://www.youtube.com/c/Freecodecamp' }
+  ]},
+  { category:'Documentação', icon:'📖', items:[
+    { name:'Documentação oficial (pt-BR)', url:'https://docs.python.org/pt-br/3/' },
+    { name:'Python Package Index (PyPI)', url:'https://pypi.org/' }
+  ]},
+  { category:'Livros', icon:'📚', items:[
+    { name:'Automate the Boring Stuff (grátis online)', url:'https://automatetheboringstuff.com/' }
+  ]},
+  { category:'Cheat Sheets', icon:'📝', items:[
+    { name:'pythoncheatsheet.org', url:'https://www.pythoncheatsheet.org/' }
+  ]},
+  { category:'Exercícios', icon:'🏋️', items:[
+    { name:'Exercism — trilha Python', url:'https://exercism.org/tracks/python' },
+    { name:'HackerRank Python', url:'https://www.hackerrank.com/domains/python' }
+  ]},
+  { category:'Plataformas', icon:'🖥️', items:[
+    { name:'Kaggle', url:'https://www.kaggle.com/' },
+    { name:'roadmap.sh Python', url:'https://roadmap.sh/python' }
+  ]}
+];
+
+/* ---- Cursos gratuitos reconhecidos ---- */
+Data.courses = [
+  { name:'Curso em Vídeo (Gustavo Guanabara)', level:'Iniciante', time:'~40h', desc:'O curso de Python em português mais popular do Brasil.', url:'https://www.cursoemvideo.com/curso/python-3-mundo-1/' },
+  { name:'Documentação Oficial do Python', level:'Todos os níveis', time:'Referência', desc:'A fonte definitiva sobre a linguagem, em português.', url:'https://docs.python.org/pt-br/3/' },
+  { name:'freeCodeCamp — Python', level:'Iniciante', time:'~4h (vídeo único)', desc:'Curso introdutório completo e gratuito.', url:'https://www.freecodecamp.org/news/tag/python/' },
+  { name:'Harvard CS50P', level:'Intermediário', time:'~15h', desc:'Introdução à programação com Python, por Harvard.', url:'https://cs50.harvard.edu/python/' },
+  { name:'Microsoft Learn — Python', level:'Iniciante', time:'~8h', desc:'Trilha oficial da Microsoft para iniciantes.', url:'https://learn.microsoft.com/pt-br/training/paths/beginner-python/' },
+  { name:'W3Schools Python', level:'Iniciante', time:'Referência rápida', desc:'Tutoriais curtos com editor interativo.', url:'https://www.w3schools.com/python/' },
+  { name:'Real Python (conteúdo gratuito)', level:'Intermediário/Avançado', time:'Variável', desc:'Artigos e tutoriais aprofundados sobre Python.', url:'https://realpython.com/' },
+  { name:'GeeksforGeeks Python', level:'Todos os níveis', time:'Referência', desc:'Extensa base de artigos e exercícios.', url:'https://www.geeksforgeeks.org/python-programming-language/' },
+  { name:'Kaggle Learn — Python', level:'Iniciante', time:'~5h', desc:'Micro-curso prático focado em dados.', url:'https://www.kaggle.com/learn/python' },
+  { name:'Exercism — Python Track', level:'Todos os níveis', time:'Contínuo', desc:'Exercícios com mentoria e feedback da comunidade.', url:'https://exercism.org/tracks/python' },
+  { name:'Python Brasil', level:'Comunidade', time:'—', desc:'Comunidade oficial brasileira de Python.', url:'https://python.org.br/' },
+  { name:'roadmap.sh — Python', level:'Todos os níveis', time:'Guia visual', desc:'Roteiro de estudos visual e atualizado.', url:'https://roadmap.sh/python' }
+];
+
+/* ---- Desafios / quests ---- */
+Data.challenges = [
+  { id:'q1', type:'Missão', title:'Primeiro Contato', desc:'Imprima "Olá, RPG!" no editor de código.', chapter:1, xp:20, coins:10 },
+  { id:'q2', type:'Missão', title:'Guarda-Tesouros', desc:'Crie 3 variáveis (nome, nível, classe) e imprima todas.', chapter:2, xp:25, coins:10 },
+  { id:'q3', type:'Mini Boss', title:'Calculadora Relâmpago', desc:'Use operadores para calcular a média de 3 notas.', chapter:3, xp:35, coins:15 },
+  { id:'q4', type:'Mini Boss', title:'Guardião da Decisão', desc:'Classifique um número em positivo, negativo ou zero.', chapter:4, xp:35, coins:15 },
+  { id:'q5', type:'Boss', title:'Mestre dos Loops', desc:'Gere a tabuada completa de 1 a 10 usando for aninhado.', chapter:5, xp:60, coins:30 },
+  { id:'q6', type:'Boss', title:'Arquiteto de Funções', desc:'Crie uma função que valide se uma palavra é palíndromo.', chapter:6, xp:60, coins:30 },
+  { id:'q7', type:'Projeto Final', title:'Sistema Bancário RPG', desc:'Combine tudo que aprendeu em um mini sistema bancário no editor.', chapter:22, xp:150, coins:80 }
+];
+
+/* =====================================================================
+   MODULE: Views — renderização de cada página (dashboard, mapa, lição)
+===================================================================== */
+const Views = {};
+
+Views.renderDashboard = function(){
+  const p = State.player;
+  const pct = Math.round((p.xp / p.xpToNext) * 100);
+  const totalChapters = Data.chapters.length;
+  const doneChapters = Data.chapters.filter(c => State.progressFor(c.id).done).length;
+  const nextChapter = Data.chapters.find(c => !State.progressFor(c.id).done) || Data.chapters[0];
+  const weekMinutes = Views._weekMinutes();
+  const weekPct = Math.min(100, Math.round(weekMinutes / p.weeklyGoalMinutes * 100));
+
+  document.getElementById('page-dashboard').innerHTML = `
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Bem-vindo(a) de volta, <span>${p.name}</span></h1>
+        <p class="page-sub">${p.class} • ${p.title} • Nível ${p.level}</p>
+      </div>
+      <button class="btn btn-primary" data-goto-chapter="${nextChapter.id}">Continuar Jornada ▶</button>
+    </div>
+
+    <div class="grid grid-4">
+      <div class="card tilt hoverable hero-card">
+        <div class="flex justify-between items-center">
+          <div>
+            <div class="small text-2">Experiência (XP)</div>
+            <div style="font-size:22px;font-weight:800;">${p.xp} / ${p.xpToNext}</div>
+          </div>
+          <div class="stat-tile" style="text-align:right;">
+            <div class="tile-icon">⭐</div>
+            <div class="tile-value">Nv. ${p.level}</div>
+          </div>
+        </div>
+        <div class="xp-bar-track mt-16"><div class="xp-bar-fill" style="width:${pct}%"></div></div>
+        <p class="small text-3 mt-8">${pct}% para o próximo nível</p>
+      </div>
+
+      <div class="card tilt hoverable stat-tile">
+        <div class="tile-icon">🔥</div>
+        <div class="tile-value">${p.streak} dias</div>
+        <div class="tile-label">Sequência de estudos</div>
+      </div>
+      <div class="card tilt hoverable stat-tile">
+        <div class="tile-icon">🪙</div>
+        <div class="tile-value">${p.coins}</div>
+        <div class="tile-label">Moedas</div>
+      </div>
+      <div class="card tilt hoverable stat-tile">
+        <div class="tile-icon">⏳</div>
+        <div class="tile-value">${Math.floor(p.totalStudyMinutes/60)}h ${p.totalStudyMinutes%60}m</div>
+        <div class="tile-label">Tempo estudado</div>
+      </div>
+    </div>
+
+    <div class="grid grid-3 mt-24">
+      <div class="card tilt hoverable mission-card">
+        <div class="small text-2">🎯 Missão do dia</div>
+        <h3 class="mt-8">Complete 1 lição hoje</h3>
+        <p class="small text-3 mt-8">Ganhe +15 XP bônus ao concluir qualquer capítulo hoje.</p>
+        <button class="btn btn-ghost btn-sm mt-16" data-goto="map">Ver mapa</button>
+      </div>
+      <div class="card tilt hoverable goal-card">
+        <div class="small text-2">📅 Objetivo semanal</div>
+        <div class="flex items-center gap-16 mt-8">
+          <div class="ring-wrap">${Views._ring(weekPct, 74)}</div>
+          <div>
+            <div style="font-weight:800;font-size:16px;">${weekMinutes} / ${p.weeklyGoalMinutes} min</div>
+            <div class="small text-3">estudados esta semana</div>
+          </div>
+        </div>
+      </div>
+      <div class="card tilt hoverable">
+        <div class="small text-2">📘 Curso atual</div>
+        <h3 class="mt-8">${nextChapter.icon} ${nextChapter.title}</h3>
+        <p class="small text-3 mt-8">${doneChapters}/${totalChapters} capítulos concluídos (${Math.round(doneChapters/totalChapters*100)}%)</p>
+        <div class="xp-bar-track mt-8" style="height:8px;"><div class="xp-bar-fill" style="width:${doneChapters/totalChapters*100}%"></div></div>
+        <button class="btn btn-primary btn-sm mt-16" data-goto-chapter="${nextChapter.id}">Continuar</button>
+      </div>
+    </div>
+
+    <div class="grid grid-4 mt-24">
+      <div class="card tilt hoverable stat-tile"><div class="tile-icon">🏆</div><div class="tile-value">${State.data.achievements.length}/${Data.badges.length}</div><div class="tile-label">Conquistas</div></div>
+      <div class="card tilt hoverable stat-tile"><div class="tile-icon">⚔️</div><div class="tile-value">${State.data.challenges.done.length}/${Data.challenges.length}</div><div class="tile-label">Desafios vencidos</div></div>
+      <div class="card tilt hoverable stat-tile"><div class="tile-icon">🧠</div><div class="tile-value">${Object.values(State.data.progress).filter(x=>x.quizPassed).length}</div><div class="tile-label">Quizzes gabaritados</div></div>
+      <div class="card tilt hoverable stat-tile"><div class="tile-icon">💎</div><div class="tile-value">${p.skillPoints}</div><div class="tile-label">Pontos de habilidade</div></div>
+    </div>
+  `;
+
+  document.querySelectorAll('[data-goto-chapter]').forEach(b=>{
+    b.addEventListener('click', ()=> UI.openLesson(parseInt(b.dataset.gotoChapter)));
+  });
+  document.querySelectorAll('[data-goto]').forEach(b=>{
+    b.addEventListener('click', ()=> UI.goTo(b.dataset.goto));
+  });
+};
+
+Views._weekMinutes = function(){
+  const log = State.data.activityLog;
+  let total = 0;
+  const now = new Date();
+  for(let i=0;i<7;i++){
+    const d = new Date(now); d.setDate(d.getDate()-i);
+    const key = d.toISOString().slice(0,10);
+    total += log[key] || 0;
+  }
+  return total;
+};
+
+Views._ring = function(pct, size){
+  const r = (size/2) - 6;
+  const c = 2 * Math.PI * r;
+  const offset = c - (pct/100)*c;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="transform:rotate(-90deg);">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="url(#ringGrad)" stroke-width="7" stroke-linecap="round"
+      stroke-dasharray="${c}" stroke-dashoffset="${offset}"/>
+    <defs><linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00e5ff"/><stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient></defs>
+  </svg><div class="ring-label" style="transform:none;"><b>${pct}%</b><span>meta</span></div>`;
+};
+
+/* ---- Mapa de Aprendizado ---- */
+Views.renderMap = function(){
+  let unlockedFound = false;
+  const nodes = Data.chapters.map((c, idx)=>{
+    const prog = State.progressFor(c.id);
+    let state = 'locked';
+    if(prog.done) state = 'completed';
+    else if(idx === 0 || State.progressFor(Data.chapters[idx-1].id).done) state = 'unlocked';
+    const fav = State.data.favorites.includes(c.id) ? '⭐' : '';
+    return `<div class="planet ${state}" data-chapter="${c.id}" data-locked="${state==='locked'}">
+      <div class="planet-orb">${c.icon}</div>
+      <div class="planet-name">${fav} ${c.title}</div>
+      <div class="planet-num">Cap. ${c.id}${c.deep ? '' : ' • em breve'}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('page-map').innerHTML = `
+    <div class="page-header">
+      <div><h1 class="page-title">Mapa de <span>Aprendizado</span></h1><p class="page-sub">22 capítulos — desbloqueie um planeta de cada vez</p></div>
+    </div>
+    <div class="card map-wrap">
+      <div class="planet-grid">${nodes}</div>
+    </div>
+  `;
+
+  document.querySelectorAll('.planet').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const id = parseInt(el.dataset.chapter);
+      if(el.dataset.locked === 'true'){
+        Toast.show('Complete o capítulo anterior para desbloquear este!', '🔒');
+        return;
+      }
+      UI.openLesson(id);
+    });
+  });
+};
+
+/* ---- Página de Lição ---- */
+Views._lessonTab = 'simples';
+Views.renderLesson = function(chapterId){
+  const chapter = Data.chapters.find(c=>c.id===chapterId) || Data.chapters[0];
+  const container = document.getElementById('page-lesson');
+  const prog = State.progressFor(chapter.id);
+  const isFav = State.data.favorites.includes(chapter.id);
+
+  if(!chapter.deep){
+    container.innerHTML = `
+      <div class="page-header">
+        <div><h1 class="page-title">${chapter.icon} <span>${chapter.title}</span></h1><p class="page-sub">Capítulo ${chapter.id} de 22</p></div>
+        <button class="btn btn-ghost" data-goto="map">◀ Voltar ao mapa</button>
+      </div>
+      <div class="card locked-banner">
+        <div class="big-icon">🚧</div>
+        <h2>Conteúdo em construção</h2>
+        <p class="text-2 mt-8" style="max-width:520px;margin:0 auto;">Este capítulo já está no mapa e libera XP de exploração. O conteúdo completo (explicações, exemplos e quiz) chega em uma próxima atualização. Tópicos previstos:</p>
+        <ul class="mt-16" style="display:inline-block;text-align:left;">${chapter.subtopics.map(s=>`<li class="checklist-item">📍 ${s}</li>`).join('')}</ul>
+        <div class="mt-24">
+          <button class="btn btn-primary" id="preview-complete-btn">Marcar como explorado (+${Math.round(chapter.xp/2)} XP)</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('preview-complete-btn').addEventListener('click', ()=>{
+      if(!prog.done){
+        prog.done = true;
+        Progression.addXP(Math.round(chapter.xp/2), chapter.title);
+        Progression.registerActivity(5);
+      }
+      Views.renderMap();
+      UI.goTo('map');
+    });
+    return;
+  }
+
+  const content = Data.deepContent[chapter.id];
+  Views._lessonTab = 'simples';
+
+  container.innerHTML = `
+    <div class="page-header">
+      <div class="lesson-header">
+        <div class="lesson-icon">${chapter.icon}</div>
+        <div>
+          <h1 class="page-title">${chapter.title}</h1>
+          <p class="page-sub">Capítulo ${chapter.id} de 22 • +${chapter.xp} XP ao concluir</p>
+        </div>
+      </div>
+      <div class="flex gap-12 items-center">
+        <button class="star-btn ${isFav?'active':''}" id="fav-btn" title="Favoritar">★</button>
+        <button class="btn btn-ghost" data-goto="map">◀ Mapa</button>
+      </div>
+    </div>
+
+    <div class="grid" style="grid-template-columns:2.2fr 1fr;gap:24px;">
+      <div class="card">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="simples">🟢 Simples</button>
+          <button class="tab-btn" data-tab="intermediario">🟡 Intermediário</button>
+          <button class="tab-btn" data-tab="avancado">🔴 Avançado</button>
+          <button class="tab-btn" data-tab="exemplos">💡 Exemplos</button>
+          <button class="tab-btn" data-tab="diagrama">🗺️ Diagrama</button>
+          <button class="tab-btn" data-tab="quiz">🧠 Quiz</button>
+        </div>
+
+        <div class="tab-panel active" data-panel="simples">${content.simples}</div>
+        <div class="tab-panel" data-panel="intermediario">${content.intermediario}</div>
+        <div class="tab-panel" data-panel="avancado">${content.avancado}</div>
+        <div class="tab-panel" data-panel="exemplos">
+          ${content.exemplos.map(ex=>`<h4>${ex.title}</h4><div class="code-block">${Data.hl(ex.code)}</div><div class="output-block">${ex.output}</div>`).join('')}
+        </div>
+        <div class="tab-panel" data-panel="diagrama"><div class="diagram-wrap">${content.diagramSvg}</div></div>
+        <div class="tab-panel" data-panel="quiz" id="quiz-panel"></div>
+
+        <div class="callout tip mt-24"><b>📌 Resumo:</b> ${content.resumo}</div>
+        <div class="callout fun"><b>✨ Curiosidades:</b><ul>${content.curiosidades.map(c=>`<li>${c}</li>`).join('')}</ul></div>
+        <div class="callout warn"><b>⚠️ Erros comuns:</b><ul>${content.errosComuns.map(c=>`<li>${c}</li>`).join('')}</ul></div>
+        <div class="callout tip"><b>✅ Boas práticas:</b><ul>${content.boasPraticas.map(c=>`<li>${c}</li>`).join('')}</ul></div>
+
+        <div class="card mt-16" style="background:rgba(168,85,247,0.06);">
+          <h4>⚔️ Desafio do capítulo</h4>
+          <p class="mt-8">${content.desafio.enunciado}</p>
+          <button class="btn btn-primary btn-sm mt-16" id="go-editor-btn">Resolver no Editor</button>
+        </div>
+      </div>
+
+      <div class="flex-col gap-16">
+        <div class="card">
+          <h4>✅ Checklist do capítulo</h4>
+          <div class="mt-8">${chapter.subtopics.map((s,i)=>`
+            <label class="checklist-item"><input type="checkbox" data-check="${i}" ${prog.checklist[i]?'checked':''}> ${s}</label>
+          `).join('')}</div>
+        </div>
+        <div class="card">
+          <h4>📝 Minhas notas</h4>
+          <textarea id="lesson-notes" class="w-full mt-8" style="min-height:120px;background:var(--glass-strong);border:1px solid var(--border-glass);border-radius:10px;padding:10px;font-size:13px;" placeholder="Anote aqui o que aprendeu...">${State.data.notes[chapter.id]||''}</textarea>
+        </div>
+        <div class="card">
+          <h4>🎯 Concluir capítulo</h4>
+          <p class="small text-2 mt-8">${prog.done ? 'Você já concluiu este capítulo!' : 'Complete o quiz com nota ≥ 70% para concluir e ganhar XP.'}</p>
+          ${prog.done ? '<div class="mt-16">✅ Concluído</div>' : ''}
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Tabs
+  container.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      container.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      container.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      container.querySelector(`.tab-panel[data-panel="${btn.dataset.tab}"]`).classList.add('active');
+      if(btn.dataset.tab==='quiz') Views._renderQuiz(chapter, content);
+    });
+  });
+
+  document.getElementById('fav-btn').addEventListener('click', ()=>{
+    const favs = State.data.favorites;
+    const i = favs.indexOf(chapter.id);
+    if(i>=0) favs.splice(i,1); else favs.push(chapter.id);
+    State.save();
+    Views.renderLesson(chapter.id);
+  });
+
+  container.querySelectorAll('[data-check]').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      prog.checklist[cb.dataset.check] = cb.checked;
+      State.save();
+    });
+  });
+
+  document.getElementById('lesson-notes').addEventListener('input', e=>{
+    State.data.notes[chapter.id] = e.target.value;
+    State.save();
+  });
+
+  document.getElementById('go-editor-btn').addEventListener('click', ()=>{
+    Views._editorPrefill = content.desafio.starter;
+    UI.goTo('editor');
+  });
+
+  container.querySelectorAll('[data-goto]').forEach(b=> b.addEventListener('click', ()=>UI.goTo(b.dataset.goto)));
+};
+
+Views._quizState = null;
+Views._renderQuiz = function(chapter, content){
+  const panel = document.getElementById('quiz-panel');
+  if(!content.quiz || !content.quiz.length){ panel.innerHTML = '<p>Quiz em breve.</p>'; return; }
+  Views._quizState = { idx:0, correct:0, total:content.quiz.length, answered:false };
+  Views._drawQuizQuestion(chapter, content);
+};
+
+Views._drawQuizQuestion = function(chapter, content){
+  const panel = document.getElementById('quiz-panel');
+  const qs = Views._quizState;
+  const q = content.quiz[qs.idx];
+  panel.innerHTML = `
+    <div class="quiz-progress">${content.quiz.map((_,i)=>`<span class="${i<qs.idx?'done':''}"></span>`).join('')}</div>
+    <div class="quiz-q">Pergunta ${qs.idx+1}/${qs.total}: ${q.q}</div>
+    ${q.options.map((opt,i)=>`<button class="quiz-opt" data-opt="${i}">${opt}</button>`).join('')}
+    <div id="quiz-explain" class="callout tip mt-16" style="display:none;"></div>
+    <button class="btn btn-primary mt-16" id="quiz-next-btn" style="display:none;">Próxima ▶</button>
+  `;
+  panel.querySelectorAll('.quiz-opt').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(qs.answered) return;
+      qs.answered = true;
+      const chosen = parseInt(btn.dataset.opt);
+      panel.querySelectorAll('.quiz-opt').forEach((b,i)=>{
+        if(i===q.correct) b.classList.add('correct');
+        else if(i===chosen) b.classList.add('wrong');
+      });
+      if(chosen===q.correct) qs.correct++;
+      const explain = document.getElementById('quiz-explain');
+      explain.style.display = 'block';
+      explain.innerHTML = `<b>${chosen===q.correct?'✅ Certo!':'❌ Quase!'}</b> ${q.explain}`;
+      document.getElementById('quiz-next-btn').style.display = 'inline-flex';
+    });
+  });
+  document.getElementById('quiz-next-btn').addEventListener('click', ()=>{
+    qs.idx++;
+    qs.answered = false;
+    if(qs.idx >= qs.total){ Views._finishQuiz(chapter, content); }
+    else Views._drawQuizQuestion(chapter, content);
+  });
+};
+
+Views._finishQuiz = function(chapter, content){
+  const panel = document.getElementById('quiz-panel');
+  const qs = Views._quizState;
+  const pct = Math.round(qs.correct/qs.total*100);
+  const passed = pct >= 70;
+  const prog = State.progressFor(chapter.id);
+  panel.innerHTML = `
+    <div style="text-align:center;padding:20px 0;">
+      <div style="font-size:44px;">${passed?'🎉':'📖'}</div>
+      <h3 class="mt-8">Você acertou ${qs.correct}/${qs.total} (${pct}%)</h3>
+      <p class="text-2 mt-8">${passed ? 'Capítulo concluído com sucesso!' : 'Revise o conteúdo e tente novamente para concluir o capítulo.'}</p>
+      <button class="btn btn-primary mt-24" id="quiz-retry-btn">Refazer Quiz</button>
+    </div>
+  `;
+  document.getElementById('quiz-retry-btn').addEventListener('click', ()=> Views._renderQuiz(chapter, content));
+
+  if(passed && !prog.quizPassed){
+    prog.quizPassed = true;
+    prog.done = true;
+    State.data._exercisesDone = (State.data._exercisesDone||0) + qs.total;
+    Progression.addXP(chapter.xp, chapter.title + ' concluído');
+    Progression.addCoins(15, 'quiz do capítulo');
+    Progression.registerActivity(10);
+    State.save();
+  }
+};
+
+/* =====================================================================
+   MODULE: PyLite — mini-interpretador que simula execução de um
+   subconjunto de Python (suficiente para fins didáticos).
+   Não é um Python real: converte expressões para JS e executa em um
+   escopo isolado, com proteção contra loops infinitos.
+===================================================================== */
+const PyLite = (function(){
+
+  // Sinais de controle de fluxo (implementados como exceções internas)
+  function BreakSignal(){} function ContinueSignal(){}
+  function ReturnSignal(v){ this.value = v; }
+
+  // Compat shims: adiciona apelidos de métodos Python em protótipos nativos do JS
+  if(!String.prototype.upper){
+    String.prototype.upper = function(){ return this.toUpperCase(); };
+    String.prototype.lower = function(){ return this.toLowerCase(); };
+    String.prototype.strip = function(){ return this.trim(); };
+    String.prototype.title = function(){ return this.replace(/\w\S*/g, t=>t[0].toUpperCase()+t.slice(1).toLowerCase()); };
+    String.prototype.capitalize = function(){ return this.length? this[0].toUpperCase()+this.slice(1).toLowerCase() : this; };
+  }
+  if(!Array.prototype.append){
+    Array.prototype.append = function(x){ this.push(x); };
+  }
+
+  function pyRepr(v){
+    if(v === true) return 'True';
+    if(v === false) return 'False';
+    if(v === null || v === undefined) return 'None';
+    if(Array.isArray(v)) return '[' + v.map(pyRepr).join(', ') + ']';
+    if(typeof v === 'string') return "'" + v + "'";
+    return String(v);
+  }
+  function pyStr(v){
+    if(v === true) return 'True';
+    if(v === false) return 'False';
+    if(v === null || v === undefined) return 'None';
+    if(Array.isArray(v)) return '[' + v.map(pyRepr).join(', ') + ']';
+    if(typeof v === 'object') return JSON.stringify(v);
+    return String(v);
+  }
+
+  function stripComment(line){
+    let inS=false, inD=false, out='';
+    for(let i=0;i<line.length;i++){
+      const ch = line[i];
+      if(ch === "'" && !inD) inS = !inS;
+      else if(ch === '"' && !inS) inD = !inD;
+      if(ch === '#' && !inS && !inD) break;
+      out += ch;
+    }
+    return out;
+  }
+
+  function tokenizeLines(code){
+    return code.split('\n')
+      .map(raw => raw.replace(/\t/g,'    '))
+      .map(raw => ({ raw, stripped: stripComment(raw) }))
+      .filter(l => l.stripped.trim() !== '')
+      .map(l => ({ indent: l.stripped.match(/^ */)[0].length, text: l.stripped.trim() }));
+  }
+
+  // ---- Expressão Python -> JS ----
+  function exprToJs(expr){
+    expr = expr.trim();
+    if(expr === '') return 'undefined';
+
+    // 1) protege f-strings, convertendo para template literals
+    expr = expr.replace(/f(['"])((?:\\.|(?!\1)[\s\S])*)\1/g, (m, q, inner)=>{
+      const js = inner.replace(/\{([^{}]+)\}/g, (mm, e) => '${' + exprToJs(e.trim()) + '}');
+      return '`' + js + '`';
+    });
+
+    // 2) protege strings normais (evita que os replaces abaixo afetem seu conteúdo)
+    const literals = [];
+    expr = expr.replace(/`(?:\\.|[^`\\])*`|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, m=>{
+      literals.push(m); return '\u0001' + (literals.length-1) + '\u0001';
+    });
+
+    // 3) palavras-chave / operadores lógicos
+    expr = expr
+      .replace(/\bTrue\b/g,'true').replace(/\bFalse\b/g,'false').replace(/\bNone\b/g,'null')
+      .replace(/\band\b/g,'&&').replace(/\bor\b/g,'||')
+      .replace(/\bnot\s+/g,'!')
+      .replace(/(\S+)\s+in\s+(\S+)/g, '__in__($1,$2)');
+
+    // 4) potência e divisão inteira (operandos simples: identificador, número ou grupo entre parênteses)
+    const OP = '(\\([^()]*\\)|[A-Za-z_][A-Za-z0-9_.]*(?:\\([^()]*\\))?|\\d+\\.?\\d*)';
+    expr = expr.replace(new RegExp(OP+'\\s*\\*\\*\\s*'+OP,'g'), 'Math.pow($1,$2)');
+    expr = expr.replace(new RegExp(OP+'\\s*\\/\\/\\s*'+OP,'g'), 'Math.floor(($1)/($2))');
+
+    // 5) chamadas a print()
+    expr = expr.replace(/\bprint\s*\(/g, '__print__(');
+
+    // 6) restaura literais protegidos
+    expr = expr.replace(/\u0001(\d+)\u0001/g, (m,i)=> literals[parseInt(i)]);
+    return expr;
+  }
+
+  // ---- Parser: linhas indentadas -> árvore de statements ----
+  function parseSimple(text){
+    if(text === 'break') return {type:'break'};
+    if(text === 'continue') return {type:'continue'};
+    if(text === 'pass') return {type:'pass'};
+    if(/^return\b/.test(text)) return {type:'return', expr: text.replace(/^return\s*/, '').trim() || null};
+    const assign = text.match(/^([A-Za-z_]\w*(?:\[[^\]]+\])?)\s*(\+=|-=|\*=|\/=|=)(?!=)\s*(.+)$/);
+    if(assign){
+      return {type:'assign', target: assign[1], op: assign[2], expr: assign[3]};
+    }
+    return {type:'expr', code: text};
+  }
+
+  function parseBlock(lines, idx, baseIndent){
+    const stmts = [];
+    if(idx >= lines.length) return {stmts, idx};
+    if(baseIndent === null) baseIndent = lines[idx].indent;
+    while(idx < lines.length && lines[idx].indent === baseIndent){
+      const text = lines[idx].text;
+      if(text.endsWith(':')){
+        const header = text.slice(0,-1).trim();
+        const kw = header.split(/\s+/)[0];
+        idx++;
+        let body = [];
+        if(idx < lines.length && lines[idx].indent > baseIndent){
+          const r = parseBlock(lines, idx, null); body = r.stmts; idx = r.idx;
+        }
+        if(kw === 'if'){
+          const branches = [{ cond: header.slice(2).trim(), body }];
+          let elseBody = [];
+          while(idx < lines.length && lines[idx].indent === baseIndent){
+            const t2 = lines[idx].text;
+            if(/^elif\s.*:$/.test(t2)){
+              const cond2 = t2.replace(/^elif\s/,'').replace(/:$/,'').trim();
+              idx++;
+              let b2 = [];
+              if(idx<lines.length && lines[idx].indent>baseIndent){ const r2=parseBlock(lines,idx,null); b2=r2.stmts; idx=r2.idx; }
+              branches.push({ cond: cond2, body: b2 });
+            } else if(t2 === 'else:'){
+              idx++;
+              if(idx<lines.length && lines[idx].indent>baseIndent){ const r3=parseBlock(lines,idx,null); elseBody=r3.stmts; idx=r3.idx; }
+              break;
+            } else break;
+          }
+          stmts.push({ type:'if', branches, elseBody });
+        } else if(kw === 'for'){
+          const m = header.match(/^for\s+(\w+)\s+in\s+(.+)$/);
+          stmts.push({ type:'for', varName: m?m[1]:'_', iterExpr: m?m[2]:'[]', body });
+        } else if(kw === 'while'){
+          stmts.push({ type:'while', cond: header.slice(5).trim(), body });
+        } else if(kw === 'def'){
+          const m = header.match(/^def\s+(\w+)\s*\(([^)]*)\)$/);
+          const params = (m && m[2].trim()) ? m[2].split(',').map(s=>s.trim()) : [];
+          stmts.push({ type:'def', name: m?m[1]:'f', params, body });
+        } else {
+          stmts.push({ type:'group', body });
+        }
+      } else {
+        stmts.push(parseSimple(text));
+        idx++;
+      }
+    }
+    return { stmts, idx };
+  }
+
+  // ---- Executor ----
+  function run(code){
+    const output = [];
+    let stepCount = 0;
+    const MAX_STEPS = 60000;
+    const functions = {};
+
+    function step(){
+      stepCount++;
+      if(stepCount > MAX_STEPS) throw new Error('Loop excedeu o limite de segurança (possível loop infinito).');
+    }
+
+    function builtinsFor(scope){
+      const names = Object.keys(scope);
+      const fnFor = name => (...args) => callFunction(name, args);
+      return {
+        __print__: (...args) => { output.push(args.map(pyStr).join(' ')); },
+        __in__: (a,b) => Array.isArray(b) || typeof b==='string' ? b.includes(a) : (b && Object.prototype.hasOwnProperty.call(b,a)),
+        len: x => (x==null? 0 : x.length),
+        str: x => pyStr(x),
+        int: x => { const n = parseInt(x,10); return isNaN(n)? 0 : n; },
+        float: x => { const n = parseFloat(x); return isNaN(n)? 0 : n; },
+        abs: Math.abs, round: Math.round, sum: arr => arr.reduce((a,b)=>a+b,0),
+        min: (...a) => a.length===1 ? Math.min(...a[0]) : Math.min(...a),
+        max: (...a) => a.length===1 ? Math.max(...a[0]) : Math.max(...a),
+        range: (a,b,c) => {
+          let start=0,stop=a,stepv=1;
+          if(b!==undefined){ start=a; stop=b; }
+          if(c!==undefined) stepv=c;
+          const out=[];
+          if(stepv>0) for(let i=start;i<stop;i+=stepv) out.push(i);
+          else for(let i=start;i>stop;i+=stepv) out.push(i);
+          return out;
+        },
+        list: x => Array.isArray(x)? x.slice() : Array.from(x||[]),
+        sorted: x => [...x].sort((a,b)=> a>b?1:a<b?-1:0),
+        type: x => Array.isArray(x)?"<class 'list'>": typeof x==='string'?"<class 'str'>": typeof x==='boolean'?"<class 'bool'>": Number.isInteger(x)?"<class 'int'>":"<class 'float'>"
+      };
+    }
+
+    function evalExpr(exprStr, scope){
+      const js = exprToJs(exprStr);
+      const b = builtinsFor(scope);
+      const fnNames = Object.keys(functions).filter(n=>!(n in scope));
+      const fnCallables = {};
+      fnNames.forEach(n => fnCallables[n] = (...args) => callFunction(n, args));
+      const allScope = Object.assign({}, b, fnCallables, scope);
+      const names = Object.keys(allScope);
+      const values = names.map(n=>allScope[n]);
+      try{
+        const f = new Function(...names, 'return (' + js + ')');
+        return f(...values);
+      }catch(e){
+        throw new Error((e.name||'Erro') + ': ' + e.message + ' — em: ' + exprStr);
+      }
+    }
+
+    function execBlock(stmts, scope){
+      for(const st of stmts){
+        step();
+        switch(st.type){
+          case 'assign':{
+            let val = evalExpr(st.expr, scope);
+            if(st.op !== '='){
+              const cur = scope[st.target];
+              if(st.op==='+=') val = (Array.isArray(cur)? cur.concat(val) : cur + val);
+              else if(st.op==='-=') val = cur - val;
+              else if(st.op==='*=') val = cur * val;
+              else if(st.op==='/=') val = cur / val;
+            }
+            scope[st.target] = val;
+            break;
+          }
+          case 'expr': evalExpr(st.code, scope); break;
+          case 'pass': break;
+          case 'break': throw new BreakSignal();
+          case 'continue': throw new ContinueSignal();
+          case 'return': throw new ReturnSignal(st.expr ? evalExpr(st.expr, scope) : null);
+          case 'group': execBlock(st.body, scope); break;
+          case 'def': functions[st.name] = { params: st.params, body: st.body }; break;
+          case 'if':{
+            let matched = false;
+            for(const br of st.branches){
+              if(evalExpr(br.cond, scope)){ execBlock(br.body, scope); matched = true; break; }
+            }
+            if(!matched) execBlock(st.elseBody, scope);
+            break;
+          }
+          case 'for':{
+            const iterable = evalExpr(st.iterExpr, scope);
+            const items = Array.isArray(iterable) ? iterable : Array.from(iterable || []);
+            for(const item of items){
+              step();
+              scope[st.varName] = item;
+              try{ execBlock(st.body, scope); }
+              catch(e){ if(e instanceof BreakSignal) return; if(e instanceof ContinueSignal) continue; throw e; }
+            }
+            break;
+          }
+          case 'while':{
+            while(evalExpr(st.cond, scope)){
+              step();
+              try{ execBlock(st.body, scope); }
+              catch(e){ if(e instanceof BreakSignal) return; if(e instanceof ContinueSignal) continue; throw e; }
+            }
+            break;
+          }
+        }
+      }
+    }
+
+    function callFunction(name, args){
+      const fn = functions[name];
+      if(!fn) throw new Error(`NameError: função '${name}' não definida`);
+      const scope = {};
+      fn.params.forEach((p,i)=>{
+        if(p.startsWith('*')) scope[p.slice(1)] = args.slice(i);
+        else scope[p] = args[i];
+      });
+      try{ execBlock(fn.body, scope); return null; }
+      catch(e){ if(e instanceof ReturnSignal) return e.value; throw e; }
+    }
+
+    try{
+      const lines = tokenizeLines(code);
+      const { stmts } = parseBlock(lines, 0, null);
+      execBlock(stmts, {});
+      return { ok:true, output: output.join('\n') };
+    }catch(e){
+      const friendly = (e && e.message) ? e.message : 'Erro desconhecido';
+      return { ok:false, output: output.join('\n'), error: friendly };
+    }
+  }
+
+  return { run, pyStr };
+})();
+
+/* ---- Editor de Código ---- */
+Views._editorPrefill = null;
+Views._editorSnippets = [
+  { label:'Olá, Mundo', code:'print("Olá, mundo!")' },
+  { label:'Tabuada', code:'for i in range(1, 11):\n    print(5, "x", i, "=", 5*i)' },
+  { label:'Par ou Ímpar', code:'numero = 7\nif numero % 2 == 0:\n    print("Par")\nelse:\n    print("Ímpar")' },
+  { label:'Função', code:'def dobro(n):\n    return n * 2\n\nprint(dobro(21))' },
+  { label:'Lista', code:'frutas = ["maçã", "banana", "uva"]\nfor fruta in frutas:\n    print(fruta.upper())' }
+];
+
+Views.renderEditor = function(){
+  const starter = Views._editorPrefill || Views._editorSnippets[0].code;
+  Views._editorPrefill = null;
+
+  document.getElementById('page-editor').innerHTML = `
+    <div class="page-header">
+      <div><h1 class="page-title">Editor de <span>Código</span></h1><p class="page-sub">Escreva Python e veja a execução simulada — igual a uma IDE de verdade.</p></div>
+    </div>
+    <div class="editor-shell">
+      <div class="editor-panel">
+        <div class="editor-topbar">
+          <div class="editor-dots"><span style="background:#ff5f56;"></span><span style="background:#ffbd2e;"></span><span style="background:#27c93f;"></span></div>
+          <span class="small text-3">main.py</span>
+        </div>
+        <div class="editor-body">
+          <div class="editor-gutter" id="editor-gutter">1</div>
+          <div class="editor-textarea-wrap"><textarea id="code-input" spellcheck="false">${starter}</textarea></div>
+        </div>
+        <div class="editor-actions">
+          <button class="btn btn-primary" id="run-code-btn">▶ Executar</button>
+          <button class="btn btn-ghost" id="clear-code-btn">🗑️ Limpar</button>
+        </div>
+        <div class="snippet-list" style="padding:0 16px 16px;">
+          ${Views._editorSnippets.map((s,i)=>`<button class="snippet-chip" data-snippet="${i}">${s.label}</button>`).join('')}
+        </div>
+      </div>
+      <div class="editor-panel">
+        <div class="editor-topbar"><span class="small text-3">▶ Saída (simulada)</span></div>
+        <div class="editor-output" id="editor-output">// A saída do seu código aparecerá aqui.</div>
+      </div>
+    </div>
+  `;
+
+  const textarea = document.getElementById('code-input');
+  const gutter = document.getElementById('editor-gutter');
+  function syncGutter(){
+    const lines = textarea.value.split('\n').length;
+    gutter.innerHTML = Array.from({length:lines}, (_,i)=>i+1).join('<br>');
+  }
+  textarea.addEventListener('input', syncGutter);
+  textarea.addEventListener('scroll', ()=> gutter.scrollTop = textarea.scrollTop);
+  syncGutter();
+
+  document.getElementById('run-code-btn').addEventListener('click', ()=>{
+    const result = PyLite.run(textarea.value);
+    const out = document.getElementById('editor-output');
+    if(result.ok){
+      out.innerHTML = (result.output || '<span class="text-3">(sem saída — use print() para exibir algo)</span>');
+    } else {
+      out.innerHTML = (result.output ? result.output + '\n' : '') + `<span class="err">Traceback (execução simulada):\n${result.error}</span>`;
+    }
+    State.data._codeRuns = (State.data._codeRuns||0) + 1;
+    Progression.registerActivity(2);
+    Achievements.check();
+    State.save();
+  });
+
+  document.getElementById('clear-code-btn').addEventListener('click', ()=>{
+    textarea.value = ''; syncGutter();
+    document.getElementById('editor-output').innerHTML = '// A saída do seu código aparecerá aqui.';
+  });
+
+  document.querySelectorAll('[data-snippet]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      textarea.value = Views._editorSnippets[parseInt(btn.dataset.snippet)].code;
+      syncGutter();
+    });
+  });
+};
+
+/* ---- Desafios ---- */
+const TYPE_ICON = { 'Missão':'📜', 'Mini Boss':'👹', 'Boss':'🐲', 'Projeto Final':'👑' };
+Views.renderChallenges = function(){
+  const done = State.data.challenges.done;
+  const cards = Data.challenges.map(c=>{
+    const isDone = done.includes(c.id);
+    return `<div class="card tilt hoverable">
+      <div class="flex justify-between items-center">
+        <span class="small" style="color:var(--neon-purple);font-weight:800;">${TYPE_ICON[c.type]} ${c.type}</span>
+        ${isDone?'<span class="small" style="color:var(--neon-green);">✓ Concluído</span>':''}
+      </div>
+      <h3 class="mt-8">${c.title}</h3>
+      <p class="small text-2 mt-8">${c.desc}</p>
+      <div class="flex gap-12 mt-16 small text-3">
+        <span>⚡ +${c.xp} XP</span><span>🪙 +${c.coins}</span>
+      </div>
+      <button class="btn ${isDone?'btn-ghost':'btn-primary'} btn-sm mt-16" data-challenge="${c.id}">${isDone?'Refazer no editor':'Ir para o Editor'}</button>
+    </div>`;
+  }).join('');
+
+  document.getElementById('page-challenges').innerHTML = `
+    <div class="page-header"><div><h1 class="page-title">Sala de <span>Desafios</span></h1><p class="page-sub">Missões, Mini Bosses, Bosses e o Projeto Final</p></div></div>
+    <div class="grid grid-3">${cards}</div>
+  `;
+
+  document.querySelectorAll('[data-challenge]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const c = Data.challenges.find(x=>x.id===btn.dataset.challenge);
+      if(!done.includes(c.id)){
+        done.push(c.id);
+        Progression.addXP(c.xp, c.title);
+        Progression.addCoins(c.coins, c.title);
+        Progression.registerActivity(8);
+        Achievements.check();
+        State.save();
+      }
+      UI.goTo('editor');
+    });
+  });
+};
+
+/* ---- Projetos ---- */
+Views.renderProjects = function(){
+  const doneProjects = State.data._projectsDone || (State.data._projectsDone=[]);
+  const cards = Data.projects.map((p,i)=>{
+    const isDone = doneProjects.includes(i);
+    return `<div class="card tilt hoverable">
+      <div style="font-size:30px;">${p.icon}</div>
+      <h3 class="mt-8">${p.title}</h3>
+      <span class="small" style="color:var(--neon-cyan);">${p.level}</span>
+      <p class="small text-2 mt-8">${p.desc}</p>
+      <div class="flex gap-8 mt-8" style="flex-wrap:wrap;">${p.techs.map(t=>`<span class="small" style="background:var(--glass-strong);padding:3px 10px;border-radius:999px;">${t}</span>`).join('')}</div>
+      <label class="checklist-item mt-16"><input type="checkbox" data-project="${i}" ${isDone?'checked':''}> Marcar como concluído</label>
+    </div>`;
+  }).join('');
+
+  document.getElementById('page-projects').innerHTML = `
+    <div class="page-header"><div><h1 class="page-title">Projetos <span>Reais</span></h1><p class="page-sub">Construa seu portfólio praticando com projetos completos</p></div></div>
+    <div class="grid grid-3">${cards}</div>
+  `;
+
+  document.querySelectorAll('[data-project]').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      const i = parseInt(cb.dataset.project);
+      const arr = State.data._projectsDone;
+      if(cb.checked){
+        if(!arr.includes(i)){ arr.push(i); Progression.addXP(50,'Projeto: '+Data.projects[i].title); Progression.addCoins(25,'projeto'); Progression.registerActivity(15); Achievements.check(); }
+      } else {
+        const idx = arr.indexOf(i); if(idx>=0) arr.splice(idx,1);
+      }
+      State.save();
+    });
+  });
+};
+
+/* ---- Biblioteca ---- */
+Views.renderLibrary = function(){
+  const groups = Data.library.map(g=>`
+    <div class="card">
+      <h3>${g.icon} ${g.category}</h3>
+      <div class="mt-16 flex-col gap-8">
+        ${g.items.map(it=>`<a href="${it.url}" target="_blank" rel="noopener" class="flex justify-between items-center" style="padding:10px 14px;border-radius:10px;background:var(--glass-strong);">
+          <span class="small">${it.name}</span><span>↗</span>
+        </a>`).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('page-library').innerHTML = `
+    <div class="page-header"><div><h1 class="page-title">Biblioteca de <span>Recursos</span></h1><p class="page-sub">Links gratuitos organizados por categoria</p></div></div>
+    <div class="grid grid-3">${groups}</div>
+  `;
+};
+
+/* ---- Cursos Gratuitos ---- */
+Views.renderCourses = function(){
+  const cards = Data.courses.map(c=>`
+    <div class="card tilt hoverable">
+      <span class="small" style="color:var(--neon-purple);font-weight:700;">${c.level}</span>
+      <h3 class="mt-8">${c.name}</h3>
+      <p class="small text-2 mt-8">${c.desc}</p>
+      <p class="small text-3 mt-8">⏱️ ${c.time}</p>
+      <a href="${c.url}" target="_blank" rel="noopener" class="btn btn-primary btn-sm mt-16">Acessar curso ↗</a>
+    </div>
+  `).join('');
+
+  document.getElementById('page-courses').innerHTML = `
+    <div class="page-header"><div><h1 class="page-title">Cursos <span>Gratuitos</span></h1><p class="page-sub">Plataformas reconhecidas para complementar sua jornada</p></div></div>
+    <div class="grid grid-3">${cards}</div>
+  `;
+};
+
+/* ---- Loja ---- */
+const ICON_PREVIEWS = {'avatar_ninja':'🥷','avatar_robot':'🤖','avatar_alien':'👽','avatar_dragon':'🐉'};
+Views.renderShop = function(){
+  const owned = State.data.inventory.owned;
+  const cards = Data.shopItems.map(it=>{
+    const isOwned = owned.includes(it.id);
+    const isEquipped = (it.type==='theme' && State.data.inventory.equippedTheme===it.id) || (it.type==='avatar' && State.player.avatarIcon===ICON_PREVIEWS[it.id]);
+    let previewStyle = '';
+    if(it.type==='theme') previewStyle = `background:linear-gradient(135deg,${it.preview[0]},${it.preview[1]});`;
+    else previewStyle = 'background:var(--glass-strong);';
+    return `<div class="card tilt hoverable shop-item">
+      <div class="shop-preview" style="${previewStyle}">${it.type==='theme'?'🎨':it.icon}</div>
+      <h3>${it.name}</h3>
+      <p class="small text-2">${it.desc}</p>
+      <div class="flex justify-between items-center mt-8">
+        <span class="price-tag">🪙 ${it.price}</span>
+        ${isOwned
+          ? (isEquipped ? '<span class="small" style="color:var(--neon-green);">Equipado ✓</span>' : `<button class="btn btn-ghost btn-sm" data-equip="${it.id}">Equipar</button>`)
+          : `<button class="btn btn-gold btn-sm" data-buy="${it.id}">Comprar</button>`}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('page-shop').innerHTML = `
+    <div class="page-header">
+      <div><h1 class="page-title">Loja <span>RPG</span></h1><p class="page-sub">Gaste suas moedas em temas, avatares e títulos exclusivos</p></div>
+      <div class="stat-pill coins">🪙 ${State.player.coins} moedas</div>
+    </div>
+    <div class="grid grid-4">${cards}</div>
+  `;
+
+  document.querySelectorAll('[data-buy]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const it = Data.shopItems.find(x=>x.id===btn.dataset.buy);
+      if(State.player.coins < it.price){ Toast.show('Moedas insuficientes!', '❌'); return; }
+      State.player.coins -= it.price;
+      State.data.inventory.owned.push(it.id);
+      Toast.show(`${it.name} comprado!`, '🛍️');
+      State.save(); UI.refreshTopbar(); Views.renderShop();
+    });
+  });
+  document.querySelectorAll('[data-equip]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const it = Data.shopItems.find(x=>x.id===btn.dataset.equip);
+      if(it.type==='theme'){ State.data.inventory.equippedTheme = it.id; UI.applyEquippedTheme(); }
+      else if(it.type==='avatar'){ State.player.avatarIcon = it.icon; }
+      Toast.show(`${it.name} equipado!`, '✨');
+      State.save(); UI.refreshTopbar(); Views.renderShop();
+    });
+  });
+};
+
+/* ---- Avatar ---- */
+Views._avatarColors = ['#00e5ff','#a855f7','#ff3fa4','#39ff9d','#ffb020','#ff4d6d'];
+Views._avatarIcons = ['🧙','🥷','🤖','👽','🐉','🦸','🧝','🧛','🥷','👨‍💻','👩‍💻','🐍'];
+Views.renderAvatar = function(){
+  const p = State.player;
+  document.getElementById('page-avatar').innerHTML = `
+    <div class="page-header"><div><h1 class="page-title">Meu <span>Avatar</span></h1><p class="page-sub">Personalize seu personagem</p></div></div>
+    <div class="grid" style="grid-template-columns:1fr 1.4fr;gap:24px;">
+      <div class="card" style="text-align:center;">
+        <div class="avatar-big" id="avatar-preview" style="background:linear-gradient(135deg, ${p.avatarColor}, var(--neon-purple));">${p.avatarIcon}</div>
+        <h3>${p.name}</h3>
+        <p class="text-2">${p.class} • ${p.title}</p>
+      </div>
+      <div class="card flex-col gap-16">
+        <div>
+          <label class="small text-2">Nome do personagem</label>
+          <input id="av-name" class="w-full mt-8" value="${p.name}" style="padding:11px 14px;border-radius:10px;background:var(--glass-strong);border:1px solid var(--border-glass);">
+        </div>
+        <div>
+          <label class="small text-2">Classe</label>
+          <select id="av-class" class="w-full mt-8" style="padding:11px 14px;border-radius:10px;background:var(--glass-strong);border:1px solid var(--border-glass);">
+            ${['Mago do Backend','Guerreiro Frontend','Ranger de Dados','Arquimago Full Stack','Ladino Automatizador'].map(c=>`<option ${p.class===c?'selected':''}>${c}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label class="small text-2">Cor</label>
+          <div class="swatch-row mt-8">${Views._avatarColors.map(c=>`<button class="swatch ${p.avatarColor===c?'active':''}" data-color="${c}" style="background:${c};"></button>`).join('')}</div>
+        </div>
+        <div>
+          <label class="small text-2">Ícone</label>
+          <div class="icon-pick mt-8">${Views._avatarIcons.map(ic=>`<button class="icon-opt ${p.avatarIcon===ic?'active':''}" data-icon="${ic}">${ic}</button>`).join('')}</div>
+        </div>
+        <button class="btn btn-primary mt-8" id="save-avatar-btn">Salvar Avatar</button>
+      </div>
+    </div>
+  `;
+
+  let sel = { color:p.avatarColor, icon:p.avatarIcon };
+  document.querySelectorAll('[data-color]').forEach(b=>b.addEventListener('click', ()=>{
+    sel.color = b.dataset.color;
+    document.querySelectorAll('[data-color]').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+    document.getElementById('avatar-preview').style.background = `linear-gradient(135deg, ${sel.color}, var(--neon-purple))`;
+  }));
+  document.querySelectorAll('[data-icon]').forEach(b=>b.addEventListener('click', ()=>{
+    sel.icon = b.dataset.icon;
+    document.querySelectorAll('[data-icon]').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+    document.getElementById('avatar-preview').textContent = sel.icon;
+  }));
+  document.getElementById('save-avatar-btn').addEventListener('click', ()=>{
+    p.name = document.getElementById('av-name').value.trim() || p.name;
+    p.class = document.getElementById('av-class').value;
+    p.avatarColor = sel.color; p.avatarIcon = sel.icon;
+    State.save(); UI.refreshTopbar();
+    Toast.show('Avatar atualizado!', '🧙');
+  });
+};
+
+/* ---- Conquistas ---- */
+Views.renderAchievements = function(){
+  const cards = Data.badges.map(b=>{
+    const unlocked = State.data.achievements.includes(b.id);
+    return `<div class="card tilt hoverable badge-card ${unlocked?'unlocked':'locked'}">
+      <div class="badge-orb">${unlocked?b.icon:'🔒'}</div>
+      <div class="badge-name">${b.name}</div>
+      <div class="badge-desc">${b.desc}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('page-achievements').innerHTML = `
+    <div class="page-header"><div><h1 class="page-title">Conquistas & <span>Badges</span></h1><p class="page-sub">${State.data.achievements.length}/${Data.badges.length} desbloqueadas</p></div></div>
+    <div class="grid grid-4">${cards}</div>
+  `;
+};
+
+/* ---- Ranking (simulado) ---- */
+Views.renderRanking = function(){
+  const p = State.player;
+  const myXp = (p.level-1)*80 + p.xp;
+  const fake = [
+    {name:'CodeMaster_BR', xp:4200},{name:'PyQueen', xp:3650},{name:'DevNinja99', xp:3100},
+    {name:'ScriptWizard', xp:2500},{name:'ByteRunner', xp:1980},{name:'LoopLord', xp:1400},
+    {name:'FunctionFox', xp:820},{name:'VarValkyrie', xp:410}
+  ];
+  const all = [...fake, {name:p.name+' (você)', xp:myXp, me:true}].sort((a,b)=>b.xp-a.xp);
+  const rows = all.map((r,i)=>`<div class="rank-row ${r.me?'me':''}">
+    <div class="rank-pos">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</div>
+    <div class="flex-col" style="flex:1;"><b>${r.name}</b><span class="small text-3">${r.xp} XP totais</span></div>
+  </div>`).join('');
+
+  document.getElementById('page-ranking').innerHTML = `
+    <div class="page-header"><div><h1 class="page-title">Ranking <span>Global</span></h1><p class="page-sub">Veja como você se compara (dados locais/ilustrativos)</p></div></div>
+    <div class="card" style="max-width:560px;">${rows}</div>
+  `;
+};
+
+/* =====================================================================
+   MODULE: Charts — gráficos simples em canvas, sem bibliotecas externas
+===================================================================== */
+const Charts = {
+  bar(canvas, labels, values, color){
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    canvas.width = w*dpr; canvas.height = h*dpr; ctx.scale(dpr,dpr);
+    ctx.clearRect(0,0,w,h);
+    const max = Math.max(...values, 1);
+    const gap = 10, bw = (w - gap*(values.length+1)) / values.length;
+    values.forEach((v,i)=>{
+      const bh = (v/max) * (h-30);
+      const x = gap + i*(bw+gap), y = h - bh - 20;
+      const grad = ctx.createLinearGradient(0,y,0,h-20);
+      grad.addColorStop(0,color[0]); grad.addColorStop(1,color[1]);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(x,y,bw,bh,6) : ctx.rect(x,y,bw,bh);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(labels[i], x+bw/2, h-6);
+    });
+  },
+  line(canvas, values, color){
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    canvas.width = w*dpr; canvas.height = h*dpr; ctx.scale(dpr,dpr);
+    ctx.clearRect(0,0,w,h);
+    const max = Math.max(...values, 1);
+    const stepX = w / (values.length-1 || 1);
+    ctx.beginPath();
+    values.forEach((v,i)=>{
+      const x = i*stepX, y = h - (v/max)*(h-20) - 10;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.lineJoin='round'; ctx.stroke();
+    ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath();
+    const grad = ctx.createLinearGradient(0,0,0,h);
+    grad.addColorStop(0, color+'55'); grad.addColorStop(1, color+'00');
+    ctx.fillStyle = grad; ctx.fill();
+  }
+};
+
+/* ---- Estatísticas ---- */
+Views.renderStats = function(){
+  const p = State.player;
+  const weekLabels = ['D','S','T','Q','Q','S','S'];
+  const weekVals = [];
+  const now = new Date();
+  for(let i=6;i>=0;i--){ const d=new Date(now); d.setDate(d.getDate()-i); weekVals.push(State.data.activityLog[d.toISOString().slice(0,10)]||0); }
+
+  const heatCells = [];
+  for(let i=181;i>=0;i--){
+    const d = new Date(now); d.setDate(d.getDate()-i);
+    const key = d.toISOString().slice(0,10);
+    const mins = State.data.activityLog[key] || 0;
+    const level = mins===0?0: mins<10?1: mins<25?2: mins<45?3:4;
+    const colors = ['rgba(255,255,255,0.05)','rgba(0,229,255,0.25)','rgba(0,229,255,0.5)','rgba(0,229,255,0.75)','rgba(0,229,255,1)'];
+    heatCells.push(`<div class="heat-cell" style="background:${colors[level]};" title="${key}: ${mins}min"></div>`);
+  }
+
+  document.getElementById('page-stats').innerHTML = `
+    <div class="page-header"><div><h1 class="page-title">Suas <span>Estatísticas</span></h1><p class="page-sub">Acompanhe sua evolução ao longo do tempo</p></div></div>
+    <div class="grid grid-4">
+      <div class="card stat-tile"><div class="tile-icon">⏳</div><div class="tile-value">${Math.floor(p.totalStudyMinutes/60)}h</div><div class="tile-label">Horas estudadas</div></div>
+      <div class="card stat-tile"><div class="tile-icon">⚡</div><div class="tile-value">${(p.level-1)*80 + p.xp}</div><div class="tile-label">XP acumulado</div></div>
+      <div class="card stat-tile"><div class="tile-icon">⚔️</div><div class="tile-value">${State.data.challenges.done.length}</div><div class="tile-label">Desafios vencidos</div></div>
+      <div class="card stat-tile"><div class="tile-icon">🚀</div><div class="tile-value">${(State.data._projectsDone||[]).length}</div><div class="tile-label">Projetos concluídos</div></div>
+    </div>
+    <div class="grid grid-2 mt-24">
+      <div class="card chart-card"><h4>Minutos estudados (últimos 7 dias)</h4><canvas id="chart-week" class="mt-16"></canvas></div>
+      <div class="card chart-card"><h4>Progresso de capítulos</h4><canvas id="chart-chapters" class="mt-16"></canvas></div>
+    </div>
+    <div class="card mt-24">
+      <h4>🔥 Calendário de estudos (últimos 6 meses)</h4>
+      <div class="heatmap mt-16">${heatCells.join('')}</div>
+    </div>
+  `;
+
+  Charts.line(document.getElementById('chart-week'), weekVals, '#00e5ff');
+  const doneCount = Data.chapters.filter(c=>State.progressFor(c.id).done).length;
+  Charts.bar(document.getElementById('chart-chapters'), ['Feitos','Restantes'], [doneCount, Data.chapters.length-doneCount], ['#a855f7','#39ff9d']);
+};
+
+/* ---- Configurações ---- */
+Views.renderSettings = function(){
+  const p = State.player;
+  document.getElementById('page-settings').innerHTML = `
+    <div class="page-header"><div><h1 class="page-title">Configurações</h1><p class="page-sub">Preferências, metas e gerenciamento de dados</p></div></div>
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>🎨 Aparência</h3>
+        <div class="flex justify-between items-center mt-16">
+          <span class="small text-2">Tema</span>
+          <button class="btn btn-ghost btn-sm" id="settings-theme-btn">${State.data.settings.theme==='dark'?'🌙 Escuro':'☀️ Claro'}</button>
+        </div>
+        <div class="flex justify-between items-center mt-16">
+          <span class="small text-2">Sons de interface</span>
+          <button class="btn btn-ghost btn-sm" id="settings-sound-btn">${State.data.settings.sound?'🔊 Ativado':'🔇 Desativado'}</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>🎯 Meta semanal de estudo</h3>
+        <p class="small text-2 mt-8">Quantos minutos por semana você quer estudar?</p>
+        <input type="number" id="goal-input" value="${p.weeklyGoalMinutes}" min="30" step="10" class="mt-16" style="padding:11px 14px;border-radius:10px;background:var(--glass-strong);border:1px solid var(--border-glass);width:140px;">
+        <button class="btn btn-primary btn-sm mt-8" id="save-goal-btn">Salvar meta</button>
+      </div>
+      <div class="card">
+        <h3>💾 Progresso</h3>
+        <p class="small text-2 mt-8">Exporte seu progresso para backup, ou importe de um arquivo salvo anteriormente.</p>
+        <div class="flex gap-12 mt-16">
+          <button class="btn btn-ghost btn-sm" id="export-btn">⬇️ Exportar</button>
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer;">⬆️ Importar<input type="file" id="import-input" accept=".json" style="display:none;"></label>
+        </div>
+      </div>
+      <div class="card">
+        <h3>⚠️ Zona de risco</h3>
+        <p class="small text-2 mt-8">Isso apaga todo o seu progresso permanentemente.</p>
+        <button class="btn btn-danger btn-sm mt-16" id="reset-btn">Resetar progresso</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('settings-theme-btn').addEventListener('click', ()=>{ UI.toggleTheme(); Views.renderSettings(); });
+  document.getElementById('settings-sound-btn').addEventListener('click', ()=>{
+    State.data.settings.sound = !State.data.settings.sound; State.save(); Views.renderSettings();
+  });
+  document.getElementById('save-goal-btn').addEventListener('click', ()=>{
+    p.weeklyGoalMinutes = parseInt(document.getElementById('goal-input').value) || p.weeklyGoalMinutes;
+    State.save(); Toast.show('Meta semanal atualizada!', '🎯');
+  });
+  document.getElementById('export-btn').addEventListener('click', ()=>{
+    const blob = new Blob([JSON.stringify(State.data, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'python-academy-rpg-progresso.json'; a.click();
+    URL.revokeObjectURL(url);
+  });
+  document.getElementById('import-input').addEventListener('change', e=>{
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const imported = JSON.parse(reader.result);
+        State.data = imported; State.save();
+        Toast.show('Progresso importado!', '📥');
+        UI.refreshTopbar(); UI.applyEquippedTheme();
+        document.documentElement.setAttribute('data-theme', State.data.settings.theme);
+        UI.goTo('dashboard');
+      }catch(err){ Toast.show('Arquivo inválido.', '❌'); }
+    };
+    reader.readAsText(file);
+  });
+  document.getElementById('reset-btn').addEventListener('click', ()=>{
+    Modal.open(`
+      <h3>Tem certeza?</h3>
+      <p class="text-2 mt-8">Todo o seu progresso, XP, moedas e conquistas serão apagados. Essa ação não pode ser desfeita.</p>
+      <div class="flex gap-12 mt-24">
+        <button class="btn btn-danger" id="confirm-reset-btn">Sim, resetar tudo</button>
+        <button class="btn btn-ghost" id="cancel-reset-btn">Cancelar</button>
+      </div>
+    `);
+    document.getElementById('confirm-reset-btn').addEventListener('click', ()=>{
+      State.data = defaultState(); State.save(); Modal.close();
+      Toast.show('Progresso resetado.', '♻️');
+      UI.refreshTopbar(); UI.goTo('dashboard');
+    });
+    document.getElementById('cancel-reset-btn').addEventListener('click', Modal.close);
+  });
+};
+
+/* =====================================================================
+   MODULE: Achievements — verifica e desbloqueia badges automaticamente
+===================================================================== */
+const Achievements = {
+  check(){
+    let unlockedNew = false;
+    Data.badges.forEach(b=>{
+      if(!State.data.achievements.includes(b.id) && b.check(State)){
+        State.data.achievements.push(b.id);
+        unlockedNew = true;
+        Toast.show(`Badge desbloqueado: ${b.name}!`, b.icon);
+        State.player.coins += 20;
+      }
+    });
+    if(unlockedNew){ State.save(); UI.refreshTopbar(); }
+  }
+};
+
+/* =====================================================================
+   MODULE: Pomodoro — timer de foco flutuante
+===================================================================== */
+const Pomodoro = {
+  seconds: 25*60, running:false, timer:null, mode:'focus',
+  init(){
+    document.getElementById('pomodoro-open-btn').addEventListener('click', ()=>{
+      document.getElementById('pomodoro-widget').classList.add('show');
+    });
+    document.getElementById('pomodoro-close-btn').addEventListener('click', ()=>{
+      document.getElementById('pomodoro-widget').classList.remove('show');
+    });
+    document.getElementById('pomo-start-btn').addEventListener('click', ()=> this.toggle());
+    document.getElementById('pomo-reset-btn').addEventListener('click', ()=> this.reset());
+    this.render();
+  },
+  toggle(){
+    this.running = !this.running;
+    document.getElementById('pomo-start-btn').textContent = this.running ? 'Pausar' : 'Iniciar';
+    if(this.running){
+      this.timer = setInterval(()=>{
+        this.seconds--;
+        if(this.seconds <= 0){
+          Progression.registerActivity(this.mode==='focus'?25:0);
+          this.mode = this.mode==='focus' ? 'pause' : 'focus';
+          this.seconds = this.mode==='focus' ? 25*60 : 5*60;
+          Toast.show(this.mode==='focus' ? 'Pausa terminada — volte ao foco!' : 'Foco concluído — hora da pausa!', '🍅');
+        }
+        this.render();
+      }, 1000);
+    } else {
+      clearInterval(this.timer);
+    }
+  },
+  reset(){
+    clearInterval(this.timer); this.running = false; this.mode='focus'; this.seconds = 25*60;
+    document.getElementById('pomo-start-btn').textContent = 'Iniciar';
+    this.render();
+  },
+  render(){
+    const m = String(Math.floor(this.seconds/60)).padStart(2,'0');
+    const s = String(this.seconds%60).padStart(2,'0');
+    document.getElementById('pomo-display').textContent = `${m}:${s}`;
+  }
+};
+
+/* =====================================================================
+   MODULE: Search — busca global entre capítulos, projetos, cursos etc.
+===================================================================== */
+const Search = {
+  init(){
+    const input = document.getElementById('global-search');
+    const results = document.getElementById('search-results');
+    input.addEventListener('input', ()=>{
+      const q = input.value.trim().toLowerCase();
+      if(q.length < 2){ results.classList.remove('show'); return; }
+      const items = this.query(q);
+      if(!items.length){ results.innerHTML = '<div class="search-result-item">Nenhum resultado encontrado.</div>'; }
+      else{
+        results.innerHTML = items.map(it=>`<div class="search-result-item" data-goto="${it.page}" data-chapter="${it.chapterId||''}">
+          <span>${it.icon}</span><div><b>${it.title}</b><small>${it.subtitle}</small></div>
+        </div>`).join('');
+      }
+      results.classList.add('show');
+      results.querySelectorAll('[data-goto]').forEach(el=>{
+        el.addEventListener('click', ()=>{
+          const chId = el.dataset.chapter;
+          if(chId) UI.openLesson(parseInt(chId)); else UI.goTo(el.dataset.goto);
+          results.classList.remove('show'); input.value='';
+        });
+      });
+    });
+    document.addEventListener('click', e=>{
+      if(!e.target.closest('.search-wrap')) results.classList.remove('show');
+    });
+  },
+  query(q){
+    const out = [];
+    Data.chapters.forEach(c=>{ if(c.title.toLowerCase().includes(q)) out.push({icon:c.icon, title:c.title, subtitle:'Capítulo '+c.id, page:'lesson', chapterId:c.id}); });
+    Data.projects.forEach(p=>{ if(p.title.toLowerCase().includes(q)) out.push({icon:p.icon, title:p.title, subtitle:'Projeto • '+p.level, page:'projects'}); });
+    Data.courses.forEach(c=>{ if(c.name.toLowerCase().includes(q)) out.push({icon:'🎓', title:c.name, subtitle:'Curso gratuito', page:'courses'}); });
+    return out.slice(0,8);
+  }
+};
+
+/* =====================================================================
+   BOOTSTRAP — inicialização da aplicação
+===================================================================== */
+(function boot(){
+  State.init();
+  Particles.init();
+  Confetti.init();
+  CursorFX.init();
+  UI.init();
+  Pomodoro.init();
+  Search.init();
+  Achievements.check();
+
+  // Registra atividade a cada minuto de uso, e persiste ao sair
+  setInterval(()=> Progression.registerActivity(1), 60000);
+  window.addEventListener('beforeunload', ()=> State.save());
+})();
+
+</script>
+</body>
+</html>

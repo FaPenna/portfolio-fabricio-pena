@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block titulo %}Aproveitamento{% endblock %}
+{% block cabecalho %}Controle de home office{% endblock %}
+{% block conteudo %}
+
+{% macro indicador(p, destaque=false) %}
+  {% set cor = '#1E8E5A' if p.pct_geral >= 85 else ('#E8A13D' if p.pct_geral >= 65 else '#D64545') %}
+  <div class="cartao h-100 {{ 'borda-destaque' if destaque }}">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:11px">
+        <span class="avatar" style="width:36px;height:36px;font-size:.9rem">{{ p.nome[:1] }}</span>
+        <div>
+          <strong style="display:block;line-height:1.15">{{ p.nome }}</strong>
+          {% if p.email %}<small class="text-muted">{{ p.email }}</small>{% endif %}
+        </div>
+      </div>
+      <div class="text-end">
+        <span style="font-family:'Sora';font-weight:700;font-size:1.65rem;color:{{ cor }}">{{ p.pct_geral }}%</span>
+        <div style="font-size:.68rem;color:#6A7468;text-transform:uppercase;letter-spacing:.05em">aproveitamento</div>
+      </div>
+    </div>
+
+    <div style="font-size:.78rem;color:#6A7468;display:flex;justify-content:space-between">
+      <span>Jornada cumprida</span><span class="mono">{{ p.horas }} / {{ p.horas_esperadas }}</span>
+    </div>
+    <div class="progress mb-3" style="height:8px;background:#EAEFE6">
+      <div class="progress-bar" style="width:{{ p.pct_jornada }}%;background:var(--azul)"></div>
+    </div>
+
+    <div style="font-size:.78rem;color:#6A7468;display:flex;justify-content:space-between">
+      <span>Demandas no prazo</span>
+      <span class="mono">{{ p.no_prazo }} / {{ p.universo }}{{ '' if p.universo else ' —' }}</span>
+    </div>
+    <div class="progress" style="height:8px;background:#EAEFE6">
+      <div class="progress-bar" style="width:{{ p.pct_demandas or 0 }}%;background:{{ '#1E8E5A' }}"></div>
+    </div>
+  </div>
+{% endmacro %}
+
+<div class="cartao mb-3" style="display:flex;align-items:end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+  <form class="d-flex align-items-end gap-2" method="get">
+    <div>
+      <label class="form-label mb-1">Competência</label>
+      <input type="month" name="mes" value="{{ mes }}" class="form-control">
+    </div>
+    <button class="btn btn-outline-primary">Consultar</button>
+  </form>
+  <div style="font-size:.78rem;color:#6A7468;max-width:430px">
+    <i class="bi bi-info-circle me-1"></i><strong>Índice de aproveitamento (RN009):</strong>
+    média entre o percentual da jornada cumprida (horas registradas ÷ esperadas nos dias
+    úteis decorridos, 8h/dia) e o percentual de demandas concluídas dentro do prazo.
+  </div>
+</div>
+
+<div class="row g-3 mb-1">
+  <div class="col-lg-{{ '6' if equipe else '8' }}">
+    {{ indicador(proprio, destaque=true) }}
+  </div>
+</div>
+
+{% if equipe %}
+  <div class="cartao-titulo mt-3 mb-2" style="font-size:.95rem"><i class="bi bi-people"></i> Equipe</div>
+  <div class="row g-3">
+    {% for m in equipe %}
+      <div class="col-md-6 col-xl-4">{{ indicador(m) }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}

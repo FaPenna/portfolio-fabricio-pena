@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block titulo %}Acompanhar equipe{% endblock %}
+{% block cabecalho %}Acompanhar equipe{% endblock %}
+{% block conteudo %}
+
+<div class="row g-3">
+  {% for l in linhas %}
+  <div class="col-md-6 col-xl-4">
+    <div class="cartao h-100">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <span class="avatar">{{ l.u.nome[:1] }}</span>
+        <div>
+          <strong style="display:block;line-height:1.2">{{ l.u.nome }}</strong>
+          <small class="text-muted">{{ l.u.email }}</small>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        {% set cls = {'Trabalhando':'selo-concluida','Em pausa':'selo-pendente',
+                      'Jornada encerrada':'selo-tipo-saida','Sem registro':'selo-inativo'}[l.situacao] %}
+        <span class="selo {{ cls }}">{{ l.situacao }}</span>
+        {% if l.ultimo %}
+          <span class="mono" style="font-size:.78rem;color:#66708A">
+            {{ ROTULO_PONTO[l.ultimo.tipo] }} às {{ l.ultimo.data_hora[11:16] }}</span>
+        {% endif %}
+      </div>
+
+      <div class="d-flex text-center" style="gap:8px">
+        {% for n, rotulo, cor in [(l.p,'Pendentes','#9A6A1B'),(l.a,'Andamento','#1356C4'),(l.c,'Concluídas','#137453')] %}
+        <div style="flex:1;background:#F4F6FA;border-radius:9px;padding:9px 4px">
+          <div style="font-family:'Sora';font-weight:700;font-size:1.2rem;color:{{ cor }}">{{ n }}</div>
+          <div style="font-size:.7rem;color:#66708A">{{ rotulo }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

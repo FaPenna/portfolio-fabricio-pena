@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block titulo %}Dashboard{% endblock %}
+{% block cabecalho %}Dashboard{% endblock %}
+{% block conteudo %}
+
+<div class="cartao mb-3" style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+  <div style="display:flex;align-items:center;gap:14px">
+    <div class="kpi-icone ki-azul mb-0"><i class="bi bi-fingerprint"></i></div>
+    <div>
+      <strong>Ponto de hoje</strong>
+      <div class="text-muted" style="font-size:.84rem">
+        {% if regs_hoje %}
+          {% for r in regs_hoje %}
+            <span class="selo selo-tipo-{{ r.tipo }} me-1">{{ ROTULO_PONTO[r.tipo] }} {{ r.data_hora[11:16] }}</span>
+          {% endfor %}
+        {% else %}
+          Nenhuma marcação registrada até agora.
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% if proxima %}
+    <a href="{{ url_for('ponto') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Registrar {{ ROTULO_PONTO[proxima]|lower }}</a>
+  {% else %}
+    <span class="selo selo-concluida">Jornada encerrada</span>
+  {% endif %}
+</div>
+
+{% if session.perfil == 'colaborador' %}
+  <div class="cartao">
+    <div class="cartao-titulo"><i class="bi bi-list-task"></i> Minhas demandas em aberto</div>
+    {% if minhas %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead><tr><th>Demanda</th><th>Criado por</th><th>Prioridade</th><th>Status</th><th>Prazo</th></tr></thead>
+        <tbody>
+        {% for d in minhas %}
+          <tr>
+            <td><strong>{{ d.titulo }}</strong></td>
+            <td>{{ d.criador }}</td>
+            <td><span class="selo selo-{{ d.prioridade }}">{{ d.prioridade|capitalize }}</span></td>
+            <td><span class="selo selo-{{ d.status }}">{{ {'pendente':'Pendente','andamento':'Em andamento','concluida':'Concluída'}[d.status] }}</span></td>
+            <td>{{ d.prazo[8:] ~ '/' ~ d.prazo[5:7] ~ '/' ~ d.prazo[:4] if d.prazo else '—' }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <div class="vazio"><i class="bi bi-check2-circle"></i>Nenhuma demanda em aberto. Bom trabalho!</div>
+    {% endif %}
+  </div>
+
+{% else %}
+  <div class="row g-3 mb-3">
+    {% for icone, classe, valor, rotulo in [
+      ('people',                'ki-navy',  kpi.colaboradores, 'Colaboradores ativos'),
+      ('person-check',          'ki-verde', kpi.presentes,     'Com ponto hoje'),
+      ('hourglass-split',       'ki-ambar', kpi.pendentes,     'Demandas pendentes'),
+      ('arrow-repeat',          'ki-azul',  kpi.andamento,     'Em andamento'),
+      ('check2-circle',         'ki-verde', kpi.concluidas,    'Concluídas'),
+    ] %}
+    <div class="col-6 col-md">
+      <div class="cartao">
+        <div class="kpi-icone {{ classe }}"><i class="bi bi-{{ icone }}"></i></div>
+        <div class="kpi"><span class="valor">{{ valor }}</span><span class="rotulo">{{ rotulo }}</span></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="cartao">
+    <div class="cartao-titulo"><i class="bi bi-exclamation-diamond"></i> Demandas com prazo mais próximo</div>
+    <div class="table-responsive">
+      <table class="table">
+        <thead><tr><th>Demanda</th><th>Responsável</th><th>Prioridade</th><th>Status</th><th>Prazo</th></tr></thead>
+        <tbody>
+        {% for d in urgentes %}
+          <tr>
+            <td><strong>{{ d.titulo }}</strong></td>
+            <td>{{ d.responsavel }}</td>
+            <td><span class="selo selo-{{ d.prioridade }}">{{ d.prioridade|capitalize }}</span></td>
+            <td><span class="selo selo-{{ d.status }}">{{ {'pendente':'Pendente','andamento':'Em andamento','concluida':'Concluída'}[d.status] }}</span></td>
+            <td>{{ d.prazo[8:] ~ '/' ~ d.prazo[5:7] ~ '/' ~ d.prazo[:4] if d.prazo else '—' }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

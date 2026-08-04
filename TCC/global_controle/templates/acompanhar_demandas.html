@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block titulo %}Minhas demandas
+{% endblock %}
+{% block cabecalho %}Acompanhar demandas{% endblock %}
+{% block conteudo %}
+
+<div class="d-flex justify-content-between align-items-center mb-3" style="flex-wrap:wrap;gap:10px">
+<ul class="nav nav-pills mb-0" style="gap:6px">
+  {% for f, rotulo in [('todas','Todas'),('pendente','Pendentes'),('andamento','Em andamento'),('concluida','Concluídas')] %}
+    <li class="nav-item">
+      <a class="nav-link {{ 'active' if filtro == f }}" style="font-size:.85rem;padding:6px 14px"
+         href="{{ url_for('demandas', status=f) }}">{{ rotulo }}</a>
+    </li>
+  {% endfor %}
+</ul>
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#mNovaD">
+    <i class="bi bi-plus-lg me-1"></i>Nova demanda</button>
+</div>
+
+<div class="cartao">
+  {% if demandas %}
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th style="width:42%">Demanda</th><th>Criado por</th><th>Prioridade</th><th>Status</th><th>Prazo</th><th class="text-end">Ação</th></tr></thead>
+      <tbody>
+      {% for d in demandas %}
+        <tr>
+          <td>
+            <strong>{{ d.titulo }}</strong>
+            {% if d.descricao %}<div class="text-muted" style="font-size:.8rem">{{ d.descricao }}</div>{% endif %}
+          </td>
+          <td>{{ d.criador }}</td>
+          <td><span class="selo selo-{{ d.prioridade }}">{{ d.prioridade|capitalize }}</span></td>
+          <td><span class="selo selo-{{ d.status }}">{{ {'pendente':'Pendente','andamento':'Em andamento','concluida':'Concluída'}[d.status] }}</span></td>
+          <td>{{ d.prazo[8:] ~ '/' ~ d.prazo[5:7] ~ '/' ~ d.prazo[:4] if d.prazo else '—' }}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="modal"
+                    data-bs-target="#mEdD{{ d.id_demanda }}" title="Editar"><i class="bi bi-pencil"></i></button>
+            {% if d.status == 'pendente' %}
+              <form method="post" class="d-inline"><input type="hidden" name="acao" value="avancar"><input type="hidden" name="id" value="{{ d.id_demanda }}">
+                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-play-fill me-1"></i>Iniciar</button></form>
+            {% elif d.status == 'andamento' %}
+              <form method="post" class="d-inline"><input type="hidden" name="acao" value="avancar"><input type="hidden" name="id" value="{{ d.id_demanda }}">
+                <button class="btn btn-sm btn-primary"><i class="bi bi-check-lg me-1"></i>Concluir</button></form>
+            {% else %}
+              <span class="text-muted mono" style="font-size:.78rem">{{ d.data_conclusao[11:16] if d.data_conclusao }} · {{ d.data_conclusao[8:10] ~ '/' ~ d.data_conclusao[5:7] if d.data_conclusao }}</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="vazio"><i class="bi bi-inbox"></i>Nenhuma demanda neste filtro.</div>
+  {% endif %}
+</div>
+
+{# ---------- modal: nova demanda (criada pelo próprio colaborador — RN005) ---------- #}
+<div class="modal fade" id="mNovaD" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <form method="post">
+      <div class="modal-header"><h5 class="modal-title">Nova demanda</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="mb-3"><label class="form-label">Título</label>
+          <input name="titulo" class="form-control" required maxlength="200"></div>
+        <div class="mb-3"><label class="form-label">Descrição</label>
+          <textarea name="descricao" class="form-control" rows="3"></textarea></div>
+        <div class="row g-2">
+          <div class="col"><label class="form-label">Prioridade</label>
+            <select name="prioridade" class="form-select">
+              <option value="baixa">Baixa</option><option value="media" selected>Média</option><option value="alta">Alta</option>
+            </select></div>
+          <div class="col"><label class="form-label">Prazo</label>
+            <input type="date" name="prazo" class="form-control"></div>
+        </div>
+        <div class="mt-2" style="font-size:.76rem;color:#6A7468">A demanda será atribuída a você e ficará visível ao seu gestor.</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary">Criar demanda</button>
+      </div>
+    </form>
+  </div></div>
+</div>
+
+{# ---------- modais: edição das próprias demandas ---------- #}
+{% for d in demandas %}
+<div class="modal fade" id="mEdD{{ d.id_demanda }}" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <form method="post">
+      <input type="hidden" name="id" value="{{ d.id_demanda }}">
+      <div class="modal-header"><h5 class="modal-title">Editar demanda</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="mb-3"><label class="form-label">Título</label>
+          <input name="titulo" class="form-control" required maxlength="200" value="{{ d.titulo }}"></div>
+        <div class="mb-3"><label class="form-label">Descrição</label>
+          <textarea name="descricao" class="form-control" rows="3">{{ d.descricao or '' }}</textarea></div>
+        <div class="row g-2">
+          <div class="col"><label class="form-label">Prioridade</label>
+            <select name="prioridade" class="form-select">
+              {% for p in ['baixa','media','alta'] %}
+                <option value="{{ p }}" {{ 'selected' if d.prioridade == p }}>{{ p|capitalize }}</option>
+              {% endfor %}
+            </select></div>
+          <div class="col"><label class="form-label">Prazo</label>
+            <input type="date" name="prazo" class="form-control" value="{{ d.prazo or '' }}"></div>
+        </div>
+        <div class="mt-2" style="font-size:.76rem;color:#6A7468">O status é alterado pelos botões Iniciar/Concluir, seguindo o fluxo pendente → andamento → concluída (RN006).</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary">Salvar alterações</button>
+      </div>
+    </form>
+  </div></div>
+</div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block titulo %}Gerar relatórios{% endblock %}
+{% block cabecalho %}Gerar relatórios{% endblock %}
+{% block conteudo %}
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="cartao">
+      <div class="cartao-titulo"><i class="bi bi-file-earmark-spreadsheet"></i> Novo relatório</div>
+      <form method="post">
+        <div class="mb-3">
+          <label class="form-label">Tipo de relatório</label>
+          <select name="tipo" class="form-select">
+            <option value="ponto">Registros de ponto (jornada)</option>
+            <option value="demandas">Demandas da equipe</option>
+          </select>
+        </div>
+        <div class="row g-2 mb-4">
+          <div class="col"><label class="form-label">Início</label>
+            <input type="date" name="inicio" class="form-control" value="{{ ini_padrao }}" required></div>
+          <div class="col"><label class="form-label">Fim</label>
+            <input type="date" name="fim" class="form-control" value="{{ fim_padrao }}" required></div>
+        </div>
+        <button class="btn btn-primary w-100"><i class="bi bi-download me-1"></i>Gerar e baixar (.xlsx)</button>
+      </form>
+      <div class="mt-3" style="font-size:.78rem;color:#66708A">
+        Os arquivos são gerados em Excel com a biblioteca openpyxl e ficam registrados no histórico ao lado.
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="cartao h-100">
+      <div class="cartao-titulo"><i class="bi bi-clock-history"></i> Histórico de relatórios</div>
+      {% if historico %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead><tr><th>Tipo</th><th>Período</th><th>Gerado por</th><th>Data</th></tr></thead>
+          <tbody>
+          {% for r in historico %}
+            <tr>
+              <td><span class="selo {{ 'selo-andamento' if r.tipo == 'ponto' else 'selo-concluida' }}">
+                {{ 'Ponto' if r.tipo == 'ponto' else 'Demandas' }}</span></td>
+              <td class="mono" style="font-size:.8rem">
+                {{ r.periodo_inicio[8:] }}/{{ r.periodo_inicio[5:7] }} – {{ r.periodo_fim[8:] }}/{{ r.periodo_fim[5:7] }}/{{ r.periodo_fim[:4] }}</td>
+              <td>{{ r.gerador }}</td>
+              <td class="text-muted" style="font-size:.82rem">{{ r.data_geracao[8:10] }}/{{ r.data_geracao[5:7] }}/{{ r.data_geracao[:4] }} {{ r.data_geracao[11:16] }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+        <div class="vazio"><i class="bi bi-file-earmark"></i>Nenhum relatório gerado até o momento.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

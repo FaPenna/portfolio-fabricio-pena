@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block titulo %}Exportar AFD{% endblock %}
+{% block cabecalho %}Exportar AFD{% endblock %}
+{% block conteudo %}
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="cartao">
+      <div class="cartao-titulo"><i class="bi bi-shield-check"></i> Arquivo Fonte de Dados</div>
+      <p style="font-size:.86rem;color:#44506B">
+        O AFD reúne todas as marcações de ponto no leiaute padronizado pelo
+        Ministério do Trabalho e Emprego, sendo o documento entregue em
+        auditorias e fiscalizações trabalhistas (Portaria nº 671/2021 — REP-P).
+      </p>
+      <form method="post">
+        <div class="row g-2 mb-4">
+          <div class="col"><label class="form-label">Início</label>
+            <input type="date" name="inicio" class="form-control" value="{{ ini_padrao }}" required></div>
+          <div class="col"><label class="form-label">Fim</label>
+            <input type="date" name="fim" class="form-control" value="{{ fim_padrao }}" required></div>
+        </div>
+        <button class="btn btn-primary w-100"><i class="bi bi-download me-1"></i>Exportar AFD (.txt)</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="cartao h-100">
+      <div class="cartao-titulo"><i class="bi bi-database-check"></i> Base de marcações</div>
+      <div class="row g-3 mb-3">
+        <div class="col-6">
+          <div class="kpi"><span class="valor">{{ total }}</span><span class="rotulo">Registros armazenados</span></div>
+        </div>
+        <div class="col-6">
+          <div class="kpi">
+            <span class="valor" style="font-size:1.25rem">{{ ultimo[8:10] ~ '/' ~ ultimo[5:7] ~ '/' ~ ultimo[:4] ~ ' ' ~ ultimo[11:16] if ultimo else '—' }}</span>
+            <span class="rotulo">Última marcação registrada</span>
+          </div>
+        </div>
+      </div>
+      <hr style="border-color:var(--borda)">
+      <strong style="font-size:.8rem;letter-spacing:.05em;text-transform:uppercase;color:#66708A">Conteúdo do arquivo</strong>
+      <ul style="font-size:.84rem;color:#44506B;margin-top:8px">
+        <li><span class="mono">Registro tipo 1</span> — cabeçalho com identificação do empregador e período;</li>
+        <li><span class="mono">Registros tipo 7</span> — marcações REP-P com NSR, data/hora, CPF e hash de integridade;</li>
+        <li><span class="mono">Trailer tipo 9</span> — totalização dos registros do arquivo.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar · Global Controle</title>
+  <link href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendor/fontes.css') }}" rel="stylesheet">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+<div class="login-pagina">
+
+  <section class="login-vitrine">
+    <div class="marca" style="padding:0">
+      <img src="{{ url_for('static', filename='img/marca_globalweb.png') }}" alt="Globalweb" class="marca-img">
+      <div>
+        <div class="marca-nome">Global<span>Controle</span></div>
+        <div class="marca-sub">Globalweb Corp</div>
+      </div>
+    </div>
+
+    <div>
+      <h2><span class="destaque">Inovação por resultado.</span><br>Demandas e ponto eletrônico da sua equipe remota, em um só lugar.</h2>
+      <ul class="vitrine-itens">
+        <li><i class="bi bi-fingerprint"></i> Registro de ponto REP-P em conformidade com a Portaria nº 671/2021</li>
+        <li><i class="bi bi-list-task"></i> Criação e acompanhamento de demandas por gestores e colaboradores</li>
+        <li><i class="bi bi-shield-check"></i> NSR sequencial, hash de integridade e exportação do AFD</li>
+        <li><i class="bi bi-file-earmark-spreadsheet"></i> Relatórios de jornada e produtividade em Excel</li>
+      </ul>
+    </div>
+
+    <small style="color:#7E93AE">Trabalho de Conclusão de Curso · Sistemas de Informação · Faculdade Projeção</small>
+  </section>
+
+  <section class="login-form-area">
+    <div class="login-cartao">
+      <div class="cartao">
+        <img src="{{ url_for('static', filename='img/logo_globalweb.png') }}" alt="Globalweb" style="height:42px;margin-bottom:18px">
+        <h4 class="mb-1" style="font-weight:700">Acessar o sistema</h4>
+        <p class="text-muted mb-4" style="font-size:.88rem">Use o e-mail corporativo e a senha cadastrados.</p>
+
+        {% with msgs = get_flashed_messages(with_categories=true) %}
+          {% for cat, m in msgs %}
+            <div class="alert alert-{{ cat }} py-2" style="font-size:.85rem">{{ m }}</div>
+          {% endfor %}
+        {% endwith %}
+
+        <form method="post" autocomplete="off">
+          <div class="mb-3">
+            <label class="form-label">E-mail</label>
+            <input type="email" name="email" class="form-control" placeholder="nome@globalweb.com.br" required autofocus>
+          </div>
+          <div class="mb-4">
+            <label class="form-label">Senha</label>
+            <input type="password" name="senha" class="form-control" placeholder="••••••" required>
+          </div>
+          <button class="btn btn-primary w-100 py-2">Entrar</button>
+        </form>
+      </div>
+
+      <div class="cartao mt-3" style="font-size:.8rem">
+        <strong style="font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;color:#66708A">Ambiente de demonstração</strong>
+        <div class="mt-2 mono">
+          admin@globalweb.com.br<br>
+          mariana.souza@globalweb.com.br<br>
+          fabricio.pena@globalweb.com.br
+        </div>
+        <div class="text-muted mt-1">Senha: <span class="mono">123456</span></div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>
