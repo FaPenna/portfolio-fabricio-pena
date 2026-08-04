@@ -26,6 +26,7 @@ function closeMNav() { document.getElementById('mobile-nav').classList.remove('o
 /* ── TYPEWRITER ── */
 const roles = [
   'Engenheiro de Dados Jr.',
+  'Desenvolvedor Full-Stack',
   'Python & SQL Developer',
   'Power BI Analyst',
   'ETL Pipeline Builder',

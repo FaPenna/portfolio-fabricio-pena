@@ -162,12 +162,52 @@ table.admissoes-table tbody tr:hover{background:#f8fafc}
   .chart-grid-2,.chart-grid-3{grid-template-columns:1fr}
   .sla-class-grid{grid-template-columns:repeat(2,1fr)}
   .funnel-container{flex-direction:column}
+  #header{flex-wrap:wrap;height:auto;min-height:60px;padding:10px 16px;row-gap:8px}
+  .header-title{font-size:15px;white-space:normal}
+  .header-subtitle{display:none}
+  .search-box{order:3;flex:1 1 100%;max-width:none}
+  .header-actions{order:2;margin-left:auto}
+  .btn-upload span{display:none}
+  .portfolio-back-btn span{display:none}
+  .portfolio-back-btn{padding:9px 11px!important}
+}
+@media(max-width:480px){
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .kpi-value{font-size:22px}
+  #content{padding:14px 16px}
+  .sla-class-grid{grid-template-columns:1fr 1fr}
 }
 /* DataTables override */
 .dataTables_wrapper .dataTables_filter input{border:1.5px solid #e2e8f0;border-radius:8px;padding:6px 10px;font-size:12px;outline:none}
 .dataTables_wrapper .dataTables_length select{border:1.5px solid #e2e8f0;border-radius:8px;padding:4px 6px;font-size:12px}
 .dataTables_wrapper .dataTables_paginate .paginate_button{border-radius:6px!important;font-size:12px!important}
 .dataTables_wrapper .dataTables_paginate .paginate_button.current{background:var(--primary)!important;color:#fff!important;border-color:var(--primary)!important}
+
+/* botão padrão de retorno ao portfólio — cores fixas do site principal, iguais em todos os projetos */
+.portfolio-back-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 9px 16px !important;
+  background: #0a1628 !important;
+  color: #00d4ff !important;
+  border: 1px solid rgba(0,212,255,0.4) !important;
+  border-radius: 999px !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+  box-shadow: 0 0 0 1px rgba(0,212,255,0.08), 0 4px 14px rgba(0,0,0,0.25) !important;
+  transition: background .2s ease, box-shadow .2s ease, transform .2s ease !important;
+  line-height: 1 !important;
+}
+.portfolio-back-btn:hover {
+  background: #0f1e38 !important;
+  box-shadow: 0 0 0 1px rgba(0,212,255,0.3), 0 6px 20px rgba(0,212,255,0.2) !important;
+  transform: translateY(-1px) !important;
+}
+.portfolio-back-btn svg { flex-shrink: 0 !important; }
 </style>
 </head>
 <body>
@@ -268,6 +308,10 @@ table.admissoes-table tbody tr:hover{background:#f8fafc}
         <span>Atualizar Base</span>
         <input type="file" accept=".xlsx,.xls" style="display:none" onchange="loadExcelFile(this)">
       </label>
+      <a href="../index.html#projetos" class="portfolio-back-btn" title="Voltar ao portfólio">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <span>Voltar ao portfólio</span>
+      </a>
     </div>
   </div>
 

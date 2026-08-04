@@ -692,6 +692,14 @@
     .proj-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.7; margin-bottom: 14px; }
     .proj-desc strong { color: var(--text); font-weight: 600; }
 
+    .proj-note {
+      display: flex; align-items: flex-start; gap: 7px;
+      font-size: 0.76rem; line-height: 1.55; color: var(--muted);
+      background: var(--cyan-dim); border: 1px solid var(--cyan-border);
+      border-radius: var(--r-sm); padding: 9px 11px; margin-bottom: 14px;
+    }
+    .proj-note strong { color: var(--cyan); font-weight: 600; }
+
     .proj-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
     .proj-tag {
       font-family: 'JetBrains Mono', monospace;
