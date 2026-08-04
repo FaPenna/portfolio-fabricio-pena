@@ -49,6 +49,7 @@
         {% endwith %}
 
         <form method="post" autocomplete="off">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
           <div class="mb-3">
             <label class="form-label">E-mail</label>
             <input type="email" name="email" class="form-control" placeholder="nome@globalweb.com.br" required autofocus>

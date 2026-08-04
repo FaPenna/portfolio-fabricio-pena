@@ -13,19 +13,27 @@ Usuários seed (senha: 123456):
 import hashlib
 import io
 import os
+import secrets
 import sqlite3
 from datetime import datetime, timedelta, date
 from functools import wraps
 
 from flask import (Flask, render_template, request, redirect, url_for,
-                   session, flash, send_file, g)
+                   session, flash, send_file, g, abort)
 from werkzeug.security import generate_password_hash, check_password_hash
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'global_controle.db')
 
 app = Flask(__name__)
-app.secret_key = 'global-controle-tcc-2026'
+# Em produção, defina a variável de ambiente SECRET_KEY. Sem ela, gera uma
+# chave aleatória a cada processo (sessões não sobrevivem a um restart, mas
+# nenhuma chave fixa fica exposta no código-fonte público).
+app.secret_key = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+)
 
 # RN006 — fluxo sequencial de status das demandas
 PROXIMO_STATUS = {'pendente': 'andamento', 'andamento': 'concluida'}
@@ -251,6 +259,35 @@ def login_obrigatorio(perfis=None):
             return f(*a, **kw)
         return wrapper
     return deco
+
+
+# ---------------------------------------------------------------- CSRF
+def csrf_token():
+    """Token por sessão, incluído como campo oculto em todo <form method="post">
+    e validado em csrf_protect() abaixo — protege contra Cross-Site Request Forgery."""
+    if '_csrf' not in session:
+        session['_csrf'] = secrets.token_hex(16)
+    return session['_csrf']
+
+
+app.jinja_env.globals['csrf_token'] = csrf_token
+
+
+@app.before_request
+def csrf_protect():
+    if request.method == 'POST':
+        enviado = request.form.get('_csrf', '')
+        esperado = session.get('_csrf', '')
+        if not esperado or not secrets.compare_digest(enviado, esperado):
+            abort(400, 'Token CSRF inválido ou ausente. Recarregue a página e tente novamente.')
+
+
+@app.after_request
+def security_headers(resp):
+    resp.headers['X-Content-Type-Options'] = 'nosniff'
+    resp.headers['X-Frame-Options'] = 'DENY'
+    resp.headers['Referrer-Policy'] = 'same-origin'
+    return resp
 
 
 @app.context_processor
@@ -753,4 +790,8 @@ def perfil():
 
 if __name__ == '__main__':
     seed()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Debug/reloader do Flask só ligam se FLASK_DEBUG=1 for definido no ambiente
+    # (o debugger interativo do Werkzeug permite execução de código arbitrário
+    # se exposto publicamente, então o padrão é desligado).
+    debug = os.environ.get('FLASK_DEBUG') == '1'
+    app.run(debug=debug, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))

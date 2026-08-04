@@ -16,6 +16,7 @@
       </div>
 
       <form method="post">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
         <div class="mb-3"><label class="form-label">Nome completo</label>
           <input name="nome" class="form-control" required value="{{ u.nome }}"></div>
         <div class="row g-2 mb-3">

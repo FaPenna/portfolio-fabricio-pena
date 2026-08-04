@@ -37,10 +37,10 @@
             <button class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="modal"
                     data-bs-target="#mEdD{{ d.id_demanda }}" title="Editar"><i class="bi bi-pencil"></i></button>
             {% if d.status == 'pendente' %}
-              <form method="post" class="d-inline"><input type="hidden" name="acao" value="avancar"><input type="hidden" name="id" value="{{ d.id_demanda }}">
+              <form method="post" class="d-inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="acao" value="avancar"><input type="hidden" name="id" value="{{ d.id_demanda }}">
                 <button class="btn btn-sm btn-outline-primary"><i class="bi bi-play-fill me-1"></i>Iniciar</button></form>
             {% elif d.status == 'andamento' %}
-              <form method="post" class="d-inline"><input type="hidden" name="acao" value="avancar"><input type="hidden" name="id" value="{{ d.id_demanda }}">
+              <form method="post" class="d-inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="acao" value="avancar"><input type="hidden" name="id" value="{{ d.id_demanda }}">
                 <button class="btn btn-sm btn-primary"><i class="bi bi-check-lg me-1"></i>Concluir</button></form>
             {% else %}
               <span class="text-muted mono" style="font-size:.78rem">{{ d.data_conclusao[11:16] if d.data_conclusao }} · {{ d.data_conclusao[8:10] ~ '/' ~ d.data_conclusao[5:7] if d.data_conclusao }}</span>
@@ -60,6 +60,7 @@
 <div class="modal fade" id="mNovaD" tabindex="-1">
   <div class="modal-dialog"><div class="modal-content">
     <form method="post">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
       <div class="modal-header"><h5 class="modal-title">Nova demanda</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
       <div class="modal-body">
@@ -90,6 +91,7 @@
 <div class="modal fade" id="mEdD{{ d.id_demanda }}" tabindex="-1">
   <div class="modal-dialog"><div class="modal-content">
     <form method="post">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
       <input type="hidden" name="id" value="{{ d.id_demanda }}">
       <div class="modal-header"><h5 class="modal-title">Editar demanda</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>

@@ -11,6 +11,7 @@
 
       {% if proxima %}
         <form method="post">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
           <input type="hidden" name="tipo" value="{{ proxima }}">
           <button class="btn-marcar">
             <i class="bi bi-fingerprint me-2"></i>Registrar {{ ROTULO_PONTO[proxima]|lower }}

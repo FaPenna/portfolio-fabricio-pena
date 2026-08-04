@@ -416,6 +416,15 @@ code.inline{background:var(--glass-strong);padding:2px 7px;border-radius:6px;fon
   .portfolio-back-btn span{ display:none; }
   .portfolio-back-btn{ padding:9px 11px !important; }
 }
+@media (max-width:430px){
+  .topbar{padding:0 10px;gap:8px;}
+  .hamburger{width:34px;height:34px;}
+  .topbar-stats{gap:5px;}
+  .stat-pill{padding:6px 8px;font-size:11.5px;gap:4px;}
+  .icon-btn{width:32px;height:32px;font-size:13px;}
+  .avatar-chip{width:32px;height:32px;font-size:15px;}
+  .portfolio-back-btn{ padding:6px 8px !important; }
+}
 
 /* botão padrão de retorno ao portfólio — cores fixas do site principal, iguais em todos os projetos */
 .portfolio-back-btn {
@@ -590,6 +599,7 @@ code.inline{background:var(--glass-strong);padding:2px 7px;border-radius:6px;fon
    PYTHON ACADEMY RPG — APPLICATION SCRIPT
    Organizado em módulos via namespaces (IIFE-like objects).
 ===================================================================== */
+function escapeHtml(str){ return String(str==null?'':str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 /* ---------------------------------------------------------------------
    MODULE: Storage — camada única de persistência (localStorage)
@@ -1344,8 +1354,8 @@ Views.renderDashboard = function(){
   document.getElementById('page-dashboard').innerHTML = `
     <div class="page-header">
       <div>
-        <h1 class="page-title">Bem-vindo(a) de volta, <span>${p.name}</span></h1>
-        <p class="page-sub">${p.class} • ${p.title} • Nível ${p.level}</p>
+        <h1 class="page-title">Bem-vindo(a) de volta, <span>${escapeHtml(p.name)}</span></h1>
+        <p class="page-sub">${escapeHtml(p.class)} • ${escapeHtml(p.title)} • Nível ${p.level}</p>
       </div>
       <button class="btn btn-primary" data-goto-chapter="${nextChapter.id}">Continuar Jornada ▶</button>
     </div>
@@ -2257,13 +2267,13 @@ Views.renderAvatar = function(){
     <div class="grid" style="grid-template-columns:1fr 1.4fr;gap:24px;">
       <div class="card" style="text-align:center;">
         <div class="avatar-big" id="avatar-preview" style="background:linear-gradient(135deg, ${p.avatarColor}, var(--neon-purple));">${p.avatarIcon}</div>
-        <h3>${p.name}</h3>
-        <p class="text-2">${p.class} • ${p.title}</p>
+        <h3>${escapeHtml(p.name)}</h3>
+        <p class="text-2">${escapeHtml(p.class)} • ${escapeHtml(p.title)}</p>
       </div>
       <div class="card flex-col gap-16">
         <div>
           <label class="small text-2">Nome do personagem</label>
-          <input id="av-name" class="w-full mt-8" value="${p.name}" style="padding:11px 14px;border-radius:10px;background:var(--glass-strong);border:1px solid var(--border-glass);">
+          <input id="av-name" class="w-full mt-8" value="${escapeHtml(p.name)}" style="padding:11px 14px;border-radius:10px;background:var(--glass-strong);border:1px solid var(--border-glass);">
         </div>
         <div>
           <label class="small text-2">Classe</label>
@@ -2332,7 +2342,7 @@ Views.renderRanking = function(){
   const all = [...fake, {name:p.name+' (você)', xp:myXp, me:true}].sort((a,b)=>b.xp-a.xp);
   const rows = all.map((r,i)=>`<div class="rank-row ${r.me?'me':''}">
     <div class="rank-pos">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</div>
-    <div class="flex-col" style="flex:1;"><b>${r.name}</b><span class="small text-3">${r.xp} XP totais</span></div>
+    <div class="flex-col" style="flex:1;"><b>${escapeHtml(r.name)}</b><span class="small text-3">${r.xp} XP totais</span></div>
   </div>`).join('');
 
   document.getElementById('page-ranking').innerHTML = `

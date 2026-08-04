@@ -13,6 +13,7 @@
         auditorias e fiscalizações trabalhistas (Portaria nº 671/2021 — REP-P).
       </p>
       <form method="post">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
         <div class="row g-2 mb-4">
           <div class="col"><label class="form-label">Início</label>
             <input type="date" name="inicio" class="form-control" value="{{ ini_padrao }}" required></div>
